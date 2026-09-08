@@ -1,191 +1,55 @@
 window.addEventListener("load", () => {
 
-  const subheading = document.querySelector(".heading--sub120");
+  /* =========================================
+     ELEMENTS
+  ========================================== */
 
-  if (!subheading) return;
+  const svgText = document.querySelector(".subheading-write-text");
+  const originalHeading = document.querySelector(".heading--sub120");
 
-
-  /* =========================
-     MEASURE BEFORE HIDING
-  ========================= */
-
-  const rect = subheading.getBoundingClientRect();
-
-  const width = rect.width;
-  const height = rect.height;
-
-  const text = subheading.textContent.trim();
-
-  const computed = getComputedStyle(subheading);
-
-  const fontFamily = computed.fontFamily;
-  const fontSize = parseFloat(computed.fontSize);
-  const fontWeight = computed.fontWeight;
-  const color = computed.color;
+  if (!svgText || !originalHeading) return;
 
 
-  /* =========================
-     CREATE WRAPPER
-  ========================= */
+  /* =========================================
+     GET SUBHEADING COLOR
+  ========================================== */
 
-  const wrapper = document.createElement("div");
+  const color = getComputedStyle(originalHeading).color;
 
-  wrapper.className = "subheading-write-wrapper";
-
-  wrapper.style.width = width + "px";
-  wrapper.style.height = height + "px";
+  svgText.style.color = color;
 
 
-  /* =========================
-     CREATE SVG
-  ========================= */
+  /* =========================================
+     SVG WRITING SETUP
+  ========================================== */
 
-  const svgNS = "http://www.w3.org/2000/svg";
+  let textLength;
 
-  const svg = document.createElementNS(svgNS, "svg");
+  try {
+    textLength = svgText.getComputedTextLength();
+  } catch (e) {
+    textLength = 1000;
+  }
 
-  svg.setAttribute("class", "subheading-write-svg");
-  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-  svg.setAttribute("width", width);
-  svg.setAttribute("height", height);
+  const dashLength = textLength * 3;
 
-
-  /* =========================
-     DEFS / MASK
-  ========================= */
-
-  const defs = document.createElementNS(svgNS, "defs");
-
-  const mask = document.createElementNS(svgNS, "mask");
-
-  mask.setAttribute("id", "subheading-write-mask");
-
-
-  const path = document.createElementNS(svgNS, "path");
-
-
-  /*
-    Large horizontal path used as reveal
-  */
-
-  const y = height * 0.55;
-
-  path.setAttribute(
-    "d",
-    `
-      M ${-height} ${y}
-      C ${width * 0.15} ${height * 0.15},
-        ${width * 0.25} ${height * 0.9},
-        ${width * 0.4} ${y}
-
-      S ${width * 0.7} ${height * 0.2},
-        ${width * 0.82} ${y}
-
-      S ${width * 0.95} ${height * 0.8},
-        ${width + height} ${y}
-    `
-  );
-
-  path.setAttribute("fill", "none");
-
-  path.setAttribute("stroke", "white");
-
-  /*
-    Must be large enough to reveal
-    all the letters
-  */
-
-  path.setAttribute(
-    "stroke-width",
-    height * 1.3
-  );
-
-  path.setAttribute(
-    "stroke-linecap",
-    "round"
-  );
-
-
-  mask.appendChild(path);
-
-  defs.appendChild(mask);
-
-  svg.appendChild(defs);
-
-
-  /* =========================
-     SVG TEXT
-  ========================= */
-
-  const svgText = document.createElementNS(svgNS, "text");
-
-  svgText.textContent = text;
-
-  svgText.setAttribute("x", "0");
-
-  /*
-    baseline adjustment
-  */
-
-  svgText.setAttribute(
-    "y",
-    height * 0.82
-  );
-
-  svgText.setAttribute(
-    "fill",
-    color
-  );
-
-  svgText.setAttribute(
-    "mask",
-    "url(#subheading-write-mask)"
-  );
-
-  svgText.style.fontFamily = fontFamily;
-  svgText.style.fontSize = fontSize + "px";
-  svgText.style.fontWeight = fontWeight;
-
-
-  svg.appendChild(svgText);
-
-  wrapper.appendChild(svg);
-
-
-  /* =========================
-     INSERT SVG
-  ========================= */
-
-  subheading.parentNode.insertBefore(
-    wrapper,
-    subheading.nextSibling
-  );
-
-
-  /*
-    ONLY NOW hide the original H2
-  */
-
-  subheading.style.position = "absolute";
-  subheading.style.opacity = "0";
-  subheading.style.pointerEvents = "none";
-
-
-  /* =========================
-     PATH SETUP
-  ========================= */
-
-  const pathLength = path.getTotalLength();
-
-  gsap.set(path, {
-    strokeDasharray: pathLength,
-    strokeDashoffset: pathLength
+  gsap.set(svgText, {
+    strokeDasharray: `${dashLength} ${dashLength}`,
+    strokeDashoffset: dashLength,
+    stroke: color,
+    strokeOpacity: 1,
+    fill: "transparent",
+    opacity: 1
   });
 
 
-  /* =========================
-     OTHER INITIAL STATES
-  ========================= */
+  /* =========================================
+     INITIAL STATES
+  ========================================== */
+
+  gsap.set(".main-wrapper", {
+    autoAlpha: 1
+  });
 
   gsap.set(".title--tag", {
     autoAlpha: 0,
@@ -194,22 +58,26 @@ window.addEventListener("load", () => {
 
   gsap.set(".heading--80", {
     autoAlpha: 0,
-    y: 40
+    y: 45
+  });
+
+  gsap.set(".subheading-write-wrapper", {
+    autoAlpha: 1
   });
 
   gsap.set(".progress--bottom .max--718", {
     autoAlpha: 0,
-    y: 25
+    y: 30
   });
 
   gsap.set(".image-wrapper.is--progress1", {
     autoAlpha: 0,
-    y: 50
+    y: 55
   });
 
   gsap.set(".image-wrapper.is--progress2", {
     autoAlpha: 0,
-    y: 50
+    y: 55
   });
 
   gsap.set(".image-wrapper.is--progress1 img", {
@@ -227,20 +95,32 @@ window.addEventListener("load", () => {
   });
 
 
-  /* =========================
+  /* =========================================
      TIMELINE
-  ========================= */
+  ========================================== */
 
-  const tl = gsap.timeline();
+  const tl = gsap.timeline({
+    delay: 0.2,
+    defaults: {
+      ease: "power3.out"
+    }
+  });
 
+
+  /* =========================================
+     TAG
+  ========================================== */
 
   tl.to(".title--tag", {
     autoAlpha: 1,
     y: 0,
-    duration: 0.7,
-    ease: "power3.out"
+    duration: 0.7
   });
 
+
+  /* =========================================
+     HEADING
+  ========================================== */
 
   tl.to(".heading--80", {
     autoAlpha: 1,
@@ -250,75 +130,97 @@ window.addEventListener("load", () => {
   }, "-=0.3");
 
 
-  /* =========================
+  /* =========================================
      SUBHEADING WRITING
-  ========================= */
+  ========================================== */
 
-  tl.to(path, {
+  tl.to(svgText, {
     strokeDashoffset: 0,
-    duration: 2.5,
+    duration: 3.1,
     ease: "power1.inOut"
-  }, "-=0.2");
+  }, "-=0.1");
 
 
-  /* =========================
+  /* =========================================
+     FILL SUBHEADING
+  ========================================== */
+
+  tl.to(svgText, {
+    fill: color,
+    duration: 0.8,
+    ease: "power2.out"
+  }, "-=0.7");
+
+
+  /* =========================================
+     REMOVE OUTLINE
+  ========================================== */
+
+  tl.to(svgText, {
+    strokeOpacity: 0,
+    duration: 0.45,
+    ease: "power2.out"
+  }, "-=0.35");
+
+
+  /* =========================================
      PARAGRAPH
-  ========================= */
+  ========================================== */
 
   tl.to(".progress--bottom .max--718", {
     autoAlpha: 1,
     y: 0,
     duration: 0.9,
     ease: "power3.out"
-  }, "-=0.35");
+  }, "-=0.1");
 
 
-  /* =========================
+  /* =========================================
      IMAGE 1
-  ========================= */
+  ========================================== */
 
   tl.to(".image-wrapper.is--progress1", {
     autoAlpha: 1,
     y: 0,
     duration: 1.1,
     ease: "expo.out"
-  }, "-=0.15");
+  }, "-=0.2");
 
   tl.to(".image-wrapper.is--progress1 img", {
     scale: 1,
-    duration: 1.7,
+    duration: 1.8,
     ease: "power3.out"
   }, "<");
 
 
-  /* =========================
+  /* =========================================
      IMAGE 2
-  ========================= */
+  ========================================== */
 
   tl.to(".image-wrapper.is--progress2", {
     autoAlpha: 1,
     y: 0,
     duration: 1.1,
     ease: "expo.out"
-  }, "-=0.75");
+  }, "-=0.8");
 
   tl.to(".image-wrapper.is--progress2 img", {
     scale: 1,
-    duration: 1.7,
+    duration: 1.8,
     ease: "power3.out"
   }, "<");
 
 
-  /* =========================
+  /* =========================================
      STAMP
-  ========================= */
+  ========================================== */
 
   tl.to(".stamp", {
     autoAlpha: 1,
     scale: 1,
     rotation: 0,
-    duration: 1.1,
+    duration: 1.15,
     ease: "back.out(1.5)"
-  }, "-=0.6");
+  }, "-=0.65");
 
 });
