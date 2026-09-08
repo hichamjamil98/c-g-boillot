@@ -1,15 +1,16 @@
-/* ------------------------------
-   LOADING INTRO
--------------------------------- */
+
+
+/* =========================
+   LOADING STATES
+========================= */
 
 .main-wrapper {
   opacity: 0;
+  visibility: hidden;
 }
 
-/* évite les flashs avant GSAP */
 .title--tag,
 .heading--80,
-.heading--sub120,
 .progress--bottom .max--718,
 .image-wrapper.is--progress1,
 .image-wrapper.is--progress2,
@@ -17,20 +18,33 @@
   visibility: hidden;
 }
 
-/* heading reveal */
-.heading--80,
+
+/* =========================
+   SUBHEADING WRITING
+========================= */
+
 .heading--sub120 {
+  position: relative;
   overflow: hidden;
 }
 
-/* effet de dessin / reveal */
-.heading--sub120 {
-  position: relative;
-  clip-path: inset(0 100% 0 0);
-  will-change: clip-path, transform, opacity;
+.heading--sub120 .char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.35em);
+  filter: blur(5px);
+  will-change: transform, opacity, filter;
 }
 
-/* images */
+.heading--sub120 .char-space {
+  width: 0.28em;
+}
+
+
+/* =========================
+   IMAGES
+========================= */
+
 .image-wrapper.is--progress1,
 .image-wrapper.is--progress2 {
   overflow: hidden;
@@ -38,13 +52,19 @@
 
 .image-wrapper.is--progress1 img,
 .image-wrapper.is--progress2 img {
-  transform: scale(1.14);
+  transform: scale(1.12);
   will-change: transform;
 }
 
-/* performance */
-.stamp,
+
+/* =========================
+   PERFORMANCE
+========================= */
+
 .title--tag,
-.heading--80 {
+.heading--80,
+.heading--sub120,
+.stamp,
+.progress--bottom .max--718 {
   will-change: transform, opacity;
 }
