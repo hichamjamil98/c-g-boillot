@@ -4,9 +4,15 @@ window.addEventListener("load", () => {
 
   if (!subheading) return;
 
+
   /* =========================
-     BUILD SVG MASK
+     MEASURE BEFORE HIDING
   ========================= */
+
+  const rect = subheading.getBoundingClientRect();
+
+  const width = rect.width;
+  const height = rect.height;
 
   const text = subheading.textContent.trim();
 
@@ -15,9 +21,12 @@ window.addEventListener("load", () => {
   const fontFamily = computed.fontFamily;
   const fontSize = parseFloat(computed.fontSize);
   const fontWeight = computed.fontWeight;
+  const color = computed.color;
 
-  const width = subheading.offsetWidth;
-  const height = subheading.offsetHeight;
+
+  /* =========================
+     CREATE WRAPPER
+  ========================= */
 
   const wrapper = document.createElement("div");
 
@@ -26,34 +35,97 @@ window.addEventListener("load", () => {
   wrapper.style.width = width + "px";
   wrapper.style.height = height + "px";
 
-  const svg = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "svg"
-  );
+
+  /* =========================
+     CREATE SVG
+  ========================= */
+
+  const svgNS = "http://www.w3.org/2000/svg";
+
+  const svg = document.createElementNS(svgNS, "svg");
 
   svg.setAttribute("class", "subheading-write-svg");
-
-  svg.setAttribute(
-    "viewBox",
-    `0 0 ${width} ${height}`
-  );
-
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
   svg.setAttribute("width", width);
   svg.setAttribute("height", height);
 
 
   /* =========================
-     TEXT
+     DEFS / MASK
   ========================= */
 
-  const svgText = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "text"
+  const defs = document.createElementNS(svgNS, "defs");
+
+  const mask = document.createElementNS(svgNS, "mask");
+
+  mask.setAttribute("id", "subheading-write-mask");
+
+
+  const path = document.createElementNS(svgNS, "path");
+
+
+  /*
+    Large horizontal path used as reveal
+  */
+
+  const y = height * 0.55;
+
+  path.setAttribute(
+    "d",
+    `
+      M ${-height} ${y}
+      C ${width * 0.15} ${height * 0.15},
+        ${width * 0.25} ${height * 0.9},
+        ${width * 0.4} ${y}
+
+      S ${width * 0.7} ${height * 0.2},
+        ${width * 0.82} ${y}
+
+      S ${width * 0.95} ${height * 0.8},
+        ${width + height} ${y}
+    `
   );
+
+  path.setAttribute("fill", "none");
+
+  path.setAttribute("stroke", "white");
+
+  /*
+    Must be large enough to reveal
+    all the letters
+  */
+
+  path.setAttribute(
+    "stroke-width",
+    height * 1.3
+  );
+
+  path.setAttribute(
+    "stroke-linecap",
+    "round"
+  );
+
+
+  mask.appendChild(path);
+
+  defs.appendChild(mask);
+
+  svg.appendChild(defs);
+
+
+  /* =========================
+     SVG TEXT
+  ========================= */
+
+  const svgText = document.createElementNS(svgNS, "text");
 
   svgText.textContent = text;
 
   svgText.setAttribute("x", "0");
+
+  /*
+    baseline adjustment
+  */
 
   svgText.setAttribute(
     "y",
@@ -62,7 +134,12 @@ window.addEventListener("load", () => {
 
   svgText.setAttribute(
     "fill",
-    computed.color
+    color
+  );
+
+  svgText.setAttribute(
+    "mask",
+    "url(#subheading-write-mask)"
   );
 
   svgText.style.fontFamily = fontFamily;
@@ -70,98 +147,14 @@ window.addEventListener("load", () => {
   svgText.style.fontWeight = fontWeight;
 
 
-  /* =========================
-     MASK
-  ========================= */
-
-  const defs = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "defs"
-  );
-
-  const mask = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "mask"
-  );
-
-  mask.setAttribute(
-    "id",
-    "subheading-write-mask"
-  );
-
-
-  const maskPath = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "path"
-  );
-
-  /*
-  This path crosses the full text
-  like a handwriting stroke.
-  */
-
-  const y = height * 0.55;
-
-  maskPath.setAttribute(
-    "d",
-    `
-      M 0 ${y}
-      C ${width * 0.15} ${height * 0.2},
-        ${width * 0.25} ${height * 0.9},
-        ${width * 0.4} ${y}
-
-      S ${width * 0.7} ${height * 0.2},
-        ${width * 0.82} ${y}
-
-      S ${width * 0.95} ${height * 0.8},
-        ${width} ${y}
-    `
-  );
-
-  maskPath.setAttribute("fill", "none");
-
-  maskPath.setAttribute(
-    "stroke",
-    "white"
-  );
-
-  maskPath.setAttribute(
-    "stroke-width",
-    height * 1.4
-  );
-
-  maskPath.setAttribute(
-    "stroke-linecap",
-    "round"
-  );
-
-
-  mask.appendChild(maskPath);
-
-  defs.appendChild(mask);
-
-  svg.appendChild(defs);
-
-
-  /* apply mask */
-
-  svgText.setAttribute(
-    "mask",
-    "url(#subheading-write-mask)"
-  );
-
   svg.appendChild(svgText);
 
   wrapper.appendChild(svg);
 
 
   /* =========================
-     REPLACE VISUALLY
+     INSERT SVG
   ========================= */
-
-  subheading.style.opacity = "0";
-
-  subheading.style.position = "absolute";
 
   subheading.parentNode.insertBefore(
     wrapper,
@@ -169,14 +162,22 @@ window.addEventListener("load", () => {
   );
 
 
+  /*
+    ONLY NOW hide the original H2
+  */
+
+  subheading.style.position = "absolute";
+  subheading.style.opacity = "0";
+  subheading.style.pointerEvents = "none";
+
+
   /* =========================
-     PATH LENGTH
+     PATH SETUP
   ========================= */
 
-  const pathLength =
-    maskPath.getTotalLength();
+  const pathLength = path.getTotalLength();
 
-  gsap.set(maskPath, {
+  gsap.set(path, {
     strokeDasharray: pathLength,
     strokeDashoffset: pathLength
   });
@@ -193,46 +194,31 @@ window.addEventListener("load", () => {
 
   gsap.set(".heading--80", {
     autoAlpha: 0,
-    y: 45
+    y: 40
   });
 
-  gsap.set(
-    ".progress--bottom .max--718",
-    {
-      autoAlpha: 0,
-      y: 30
-    }
-  );
+  gsap.set(".progress--bottom .max--718", {
+    autoAlpha: 0,
+    y: 25
+  });
 
-  gsap.set(
-    ".image-wrapper.is--progress1",
-    {
-      autoAlpha: 0,
-      y: 60
-    }
-  );
+  gsap.set(".image-wrapper.is--progress1", {
+    autoAlpha: 0,
+    y: 50
+  });
 
-  gsap.set(
-    ".image-wrapper.is--progress2",
-    {
-      autoAlpha: 0,
-      y: 60
-    }
-  );
+  gsap.set(".image-wrapper.is--progress2", {
+    autoAlpha: 0,
+    y: 50
+  });
 
-  gsap.set(
-    ".image-wrapper.is--progress1 img",
-    {
-      scale: 1.15
-    }
-  );
+  gsap.set(".image-wrapper.is--progress1 img", {
+    scale: 1.14
+  });
 
-  gsap.set(
-    ".image-wrapper.is--progress2 img",
-    {
-      scale: 1.15
-    }
-  );
+  gsap.set(".image-wrapper.is--progress2 img", {
+    scale: 1.14
+  });
 
   gsap.set(".stamp", {
     autoAlpha: 0,
@@ -264,78 +250,68 @@ window.addEventListener("load", () => {
   }, "-=0.3");
 
 
-  /*
-  REAL WRITING REVEAL
-  */
+  /* =========================
+     SUBHEADING WRITING
+  ========================= */
 
-  tl.to(maskPath, {
+  tl.to(path, {
     strokeDashoffset: 0,
-    duration: 2.4,
+    duration: 2.5,
     ease: "power1.inOut"
   }, "-=0.2");
 
 
-  tl.to(
-    ".progress--bottom .max--718",
-    {
-      autoAlpha: 1,
-      y: 0,
-      duration: 0.9,
-      ease: "power3.out"
-    },
-    "-=0.4"
-  );
+  /* =========================
+     PARAGRAPH
+  ========================= */
+
+  tl.to(".progress--bottom .max--718", {
+    autoAlpha: 1,
+    y: 0,
+    duration: 0.9,
+    ease: "power3.out"
+  }, "-=0.35");
 
 
-  /* IMAGE 1 */
+  /* =========================
+     IMAGE 1
+  ========================= */
 
-  tl.to(
-    ".image-wrapper.is--progress1",
-    {
-      autoAlpha: 1,
-      y: 0,
-      duration: 1.1,
-      ease: "expo.out"
-    },
-    "-=0.15"
-  );
+  tl.to(".image-wrapper.is--progress1", {
+    autoAlpha: 1,
+    y: 0,
+    duration: 1.1,
+    ease: "expo.out"
+  }, "-=0.15");
 
-  tl.to(
-    ".image-wrapper.is--progress1 img",
-    {
-      scale: 1,
-      duration: 1.8,
-      ease: "power3.out"
-    },
-    "<"
-  );
+  tl.to(".image-wrapper.is--progress1 img", {
+    scale: 1,
+    duration: 1.7,
+    ease: "power3.out"
+  }, "<");
 
 
-  /* IMAGE 2 */
+  /* =========================
+     IMAGE 2
+  ========================= */
 
-  tl.to(
-    ".image-wrapper.is--progress2",
-    {
-      autoAlpha: 1,
-      y: 0,
-      duration: 1.1,
-      ease: "expo.out"
-    },
-    "-=0.75"
-  );
+  tl.to(".image-wrapper.is--progress2", {
+    autoAlpha: 1,
+    y: 0,
+    duration: 1.1,
+    ease: "expo.out"
+  }, "-=0.75");
 
-  tl.to(
-    ".image-wrapper.is--progress2 img",
-    {
-      scale: 1,
-      duration: 1.8,
-      ease: "power3.out"
-    },
-    "<"
-  );
+  tl.to(".image-wrapper.is--progress2 img", {
+    scale: 1,
+    duration: 1.7,
+    ease: "power3.out"
+  }, "<");
 
 
-  /* STAMP */
+  /* =========================
+     STAMP
+  ========================= */
 
   tl.to(".stamp", {
     autoAlpha: 1,

@@ -1,4 +1,3 @@
-
 /* =========================================
    ELEMENTS
 ========================================= */
@@ -15,21 +14,40 @@
 
 /* =========================================
    ORIGINAL SUBHEADING
-   garde le H2 pour SEO/accessibilité
+   IMPORTANT :
+   on garde sa vraie taille pour que le JS
+   puisse la mesurer avant de le masquer
 ========================================= */
 
 .heading--sub120 {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  overflow: hidden !important;
-  clip: rect(0 0 0 0) !important;
-  white-space: nowrap !important;
+  margin: 0;
+  position: relative;
 }
 
 
 /* =========================================
-   SVG SUBHEADING
+   GENERATED SUBHEADING
+========================================= */
+
+.subheading-write-wrapper {
+  position: relative;
+  display: block;
+  overflow: visible;
+  width: 100%;
+}
+
+.subheading-write-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+
+/* =========================================
+   SVG PATH VERSION
+   utile uniquement si tu utilises ensuite
+   un vrai SVG avec des <path>
 ========================================= */
 
 .subheading-path-wrapper {
@@ -44,22 +62,12 @@
   overflow: visible;
 }
 
-
-/* Tous les paths commencent invisibles */
-
 .subheading-svg path {
   fill: transparent;
   stroke: currentColor;
-
-  /*
-    Ajuste selon la finesse souhaitée.
-    1 à 2 fonctionne généralement bien.
-  */
   stroke-width: 1.3;
-
   stroke-linecap: round;
   stroke-linejoin: round;
-
   vector-effect: non-scaling-stroke;
 
   will-change:
@@ -95,20 +103,4 @@
 .progress--bottom .max--718,
 .stamp {
   will-change: transform, opacity;
-}
-.subheading-write-wrapper {
-  position: relative;
-  display: block;
-  overflow: visible;
-}
-
-.subheading-write-svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.heading--sub120 {
-  margin: 0;
 }
