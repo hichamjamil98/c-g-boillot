@@ -1,55 +1,132 @@
-(function () {
-  "use strict";
+window.addEventListener("DOMContentLoaded", () => {
 
-  document.addEventListener("DOMContentLoaded", init);
+  const tl = gsap.timeline({
+    defaults: {
+      ease: "power3.out"
+    }
+  });
 
-  function init() {
-    revealContent();
-    bindNewsletterForm();
-  }
+  /*
+  --------------------------------
+  INITIAL STATES
+  --------------------------------
+  */
 
-  function revealContent() {
-    var container = document.querySelector(".coming-container");
-    if (!container) return;
+  gsap.set(".main-wrapper", {
+    autoAlpha: 1
+  });
 
-    requestAnimationFrame(function () {
-      container.classList.add("is-visible");
-    });
-  }
+  gsap.set(".title--tag", {
+    autoAlpha: 0,
+    y: 16
+  });
 
-  function bindNewsletterForm() {
-    var form = document.querySelector(".coming-form");
-    if (!form) return;
+  gsap.set(".heading--80", {
+    autoAlpha: 0,
+    yPercent: 110
+  });
 
-    form.addEventListener("submit", function (event) {
-      event.preventDefault();
+  gsap.set(".heading--sub120", {
+    autoAlpha: 1,
+    y: 20,
+    clipPath: "inset(0 100% 0 0)"
+  });
 
-      var input = form.querySelector(".coming-form__input");
-      var feedback = form.querySelector(".coming-form__feedback");
-      var btn = form.querySelector(".coming-form__btn");
-      var email = input ? input.value.trim() : "";
+  gsap.set(".progress--bottom .max--718", {
+    autoAlpha: 0,
+    y: 20
+  });
 
-      if (!feedback) return;
+  gsap.set(".image-wrapper.is--progress1", {
+    autoAlpha: 0,
+    y: 45
+  });
 
-      feedback.classList.remove("is-success", "is-error");
+  gsap.set(".image-wrapper.is--progress2", {
+    autoAlpha: 0,
+    y: 45
+  });
 
-      if (!isValidEmail(email)) {
-        feedback.textContent = "Veuillez entrer une adresse e-mail valide.";
-        feedback.classList.add("is-error");
-        return;
-      }
+  gsap.set(".stamp", {
+    autoAlpha: 0,
+    scale: 0.65,
+    rotation: -20
+  });
 
-      if (btn) btn.disabled = true;
 
-      feedback.textContent = "Merci — nous vous contacterons bientôt.";
-      feedback.classList.add("is-success");
+  /*
+  --------------------------------
+  TIMELINE
+  --------------------------------
+  */
 
-      if (input) input.value = "";
-      if (btn) btn.disabled = false;
-    });
-  }
+  tl
 
-  function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
-})();
+  // tag
+  .to(".title--tag", {
+    autoAlpha: 1,
+    y: 0,
+    duration: 0.7
+  })
+
+  // main heading
+  .to(".heading--80", {
+    autoAlpha: 1,
+    yPercent: 0,
+    duration: 1.05,
+    ease: "expo.out"
+  }, "-=0.3")
+
+  // "Arrive bientôt" dessin / reveal
+  .to(".heading--sub120", {
+    clipPath: "inset(0 0% 0 0)",
+    y: 0,
+    duration: 1.5,
+    ease: "expo.inOut"
+  }, "-=0.6")
+
+  // description
+  .to(".progress--bottom .max--718", {
+    autoAlpha: 1,
+    y: 0,
+    duration: 0.8
+  }, "-=0.65")
+
+  // image 1
+  .to(".image-wrapper.is--progress1", {
+    autoAlpha: 1,
+    y: 0,
+    duration: 1.1,
+    ease: "expo.out"
+  }, "-=0.25")
+
+  .to(".image-wrapper.is--progress1 img", {
+    scale: 1,
+    duration: 1.6,
+    ease: "power3.out"
+  }, "<")
+
+  // image 2
+  .to(".image-wrapper.is--progress2", {
+    autoAlpha: 1,
+    y: 0,
+    duration: 1.1,
+    ease: "expo.out"
+  }, "-=0.8")
+
+  .to(".image-wrapper.is--progress2 img", {
+    scale: 1,
+    duration: 1.6,
+    ease: "power3.out"
+  }, "<")
+
+  // stamp final
+  .to(".stamp", {
+    autoAlpha: 1,
+    scale: 1,
+    rotation: 0,
+    duration: 1.15,
+    ease: "back.out(1.7)"
+  }, "-=0.7");
+
+});
