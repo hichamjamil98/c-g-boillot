@@ -1,13 +1,17 @@
 
-
-/* =========================
-   LOADING STATES
-========================= */
+/* =========================================
+   PAGE INITIAL STATE
+========================================= */
 
 .main-wrapper {
   opacity: 0;
   visibility: hidden;
 }
+
+
+/* =========================================
+   ELEMENTS
+========================================= */
 
 .title--tag,
 .heading--80,
@@ -19,31 +23,66 @@
 }
 
 
-/* =========================
-   SUBHEADING WRITING
-========================= */
+/* =========================================
+   ORIGINAL SUBHEADING
+   garde le H2 pour SEO/accessibilité
+========================================= */
 
 .heading--sub120 {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+}
+
+
+/* =========================================
+   SVG SUBHEADING
+========================================= */
+
+.subheading-path-wrapper {
   position: relative;
-  overflow: hidden;
+  width: 100%;
 }
 
-.heading--sub120 .char {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(0.35em);
-  filter: blur(5px);
-  will-change: transform, opacity, filter;
-}
-
-.heading--sub120 .char-space {
-  width: 0.28em;
+.subheading-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
 }
 
 
-/* =========================
+/* Tous les paths commencent invisibles */
+
+.subheading-svg path {
+  fill: transparent;
+  stroke: currentColor;
+
+  /*
+    Ajuste selon la finesse souhaitée.
+    1 à 2 fonctionne généralement bien.
+  */
+  stroke-width: 1.3;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  vector-effect: non-scaling-stroke;
+
+  will-change:
+    stroke-dashoffset,
+    stroke-dasharray,
+    opacity,
+    fill;
+}
+
+
+/* =========================================
    IMAGES
-========================= */
+========================================= */
 
 .image-wrapper.is--progress1,
 .image-wrapper.is--progress2 {
@@ -52,19 +91,18 @@
 
 .image-wrapper.is--progress1 img,
 .image-wrapper.is--progress2 img {
-  transform: scale(1.12);
+  transform: scale(1.15);
   will-change: transform;
 }
 
 
-/* =========================
+/* =========================================
    PERFORMANCE
-========================= */
+========================================= */
 
 .title--tag,
 .heading--80,
-.heading--sub120,
-.stamp,
-.progress--bottom .max--718 {
+.progress--bottom .max--718,
+.stamp {
   will-change: transform, opacity;
 }
