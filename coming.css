@@ -1,19 +1,5 @@
 /* =========================================
-   INITIAL STATES
-========================================= */
-
-.title--tag,
-.heading--80,
-.progress--bottom .max--718,
-.image-wrapper.is--progress1,
-.image-wrapper.is--progress2,
-.stamp {
-  visibility: hidden;
-}
-
-
-/* =========================================
-   TITLE WRAPPER
+   TITLE
 ========================================= */
 
 .title--wrapper {
@@ -21,10 +7,7 @@
 }
 
 
-/* =========================================
-   ORIGINAL H2
-   garde la place + SEO
-========================================= */
+/* H2 original utilisé pour garder la hauteur */
 
 .heading--sub120 {
   margin: 0;
@@ -38,10 +21,16 @@
 
 .subheading-write-wrapper {
   position: absolute;
-  left: 0;
+
+  left: 50%;
   bottom: 0;
+
+  transform: translateX(-50%);
+
   width: 100%;
+
   pointer-events: none;
+
   overflow: visible;
 }
 
@@ -52,36 +41,62 @@
 
 .subheading-write-svg {
   display: block;
+
   width: 100%;
   height: auto;
+
   overflow: visible;
 }
 
 
 /* =========================================
-   SVG TEXT
+   TEXT
 ========================================= */
 
 .subheading-write-text {
   font-family: "Young Baroque std", Arial, sans-serif;
+
   font-size: 120px;
   font-weight: 400;
 
-  fill: transparent;
-  stroke: currentColor;
+  fill: currentColor;
 
-  stroke-width: 0.8px;
+  stroke: none;
+}
+
+
+/* =========================================
+   WRITING MASK
+========================================= */
+
+.write-mask-path {
+  fill: none;
+
+  stroke: white;
+
+  /*
+  IMPORTANT :
+  le trait doit être suffisamment large
+  pour révéler toute la hauteur de la typo
+  */
+  stroke-width: 125;
 
   stroke-linecap: round;
   stroke-linejoin: round;
+}
 
-  paint-order: stroke fill;
 
-  will-change:
-    stroke-dashoffset,
-    stroke-dasharray,
-    fill,
-    opacity;
+/* =========================================
+   INITIAL ELEMENTS
+========================================= */
+
+.title--tag,
+.heading--80,
+.progress--bottom .max--718,
+.image-wrapper.is--progress1,
+.image-wrapper.is--progress2,
+.stamp {
+  visibility: hidden;
 }
 
 
@@ -96,18 +111,7 @@
 
 .image-wrapper.is--progress1 img,
 .image-wrapper.is--progress2 img {
-  transform: scale(1.12);
+  transform: scale(1.14);
+
   will-change: transform;
-}
-
-
-/* =========================================
-   PERFORMANCE
-========================================= */
-
-.title--tag,
-.heading--80,
-.progress--bottom .max--718,
-.stamp {
-  will-change: transform, opacity;
 }
