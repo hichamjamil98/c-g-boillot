@@ -13,7 +13,7 @@
 
 
 /* =========================================
-   TITLE SVG
+   SVG SUBTITLE
 ========================================= */
 
 .sub--title {
@@ -23,9 +23,31 @@
   overflow: visible;
 }
 
-.sub--title path {
+.sub--title > path {
   fill: currentColor;
-  will-change: clip-path, opacity, transform;
+}
+
+
+/* =========================================
+   WRITING MASK PATH
+========================================= */
+
+.sub--title .write-mask-path {
+  fill: none;
+  stroke: #fff;
+
+  /*
+    Large enough to reveal the filled glyphs
+    while the invisible "pen" moves
+  */
+  stroke-width: 10;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  vector-effect: non-scaling-stroke;
+
+  will-change: stroke-dashoffset;
 }
 
 
@@ -55,4 +77,19 @@
 .progress--bottom .max--718,
 .stamp {
   will-change: transform, opacity;
+}
+
+
+/* =========================================
+   WEBFLOW EDITOR
+========================================= */
+
+.w-editor .title--tag,
+.w-editor .heading--80,
+.w-editor .progress--bottom .max--718,
+.w-editor .image-wrapper.is--progress1,
+.w-editor .image-wrapper.is--progress2,
+.w-editor .stamp {
+  visibility: visible !important;
+  opacity: 1 !important;
 }
