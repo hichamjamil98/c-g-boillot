@@ -1,5 +1,19 @@
 /* =========================================
-   TITLE
+   INITIAL
+========================================= */
+
+.title--tag,
+.heading--80,
+.progress--bottom .max--718,
+.image-wrapper.is--progress1,
+.image-wrapper.is--progress2,
+.stamp {
+  visibility: hidden;
+}
+
+
+/* =========================================
+   TITLE WRAPPER
 ========================================= */
 
 .title--wrapper {
@@ -7,7 +21,10 @@
 }
 
 
-/* H2 original utilisé pour garder la hauteur */
+/* =========================================
+   ORIGINAL H2
+   garde uniquement la hauteur/layout
+========================================= */
 
 .heading--sub120 {
   margin: 0;
@@ -16,28 +33,19 @@
 
 
 /* =========================================
-   SVG WRAPPER
+   SUBHEADING SVG
 ========================================= */
 
 .subheading-write-wrapper {
   position: absolute;
 
-  left: 50%;
+  left: 0;
   bottom: 0;
-
-  transform: translateX(-50%);
 
   width: 100%;
 
   pointer-events: none;
-
-  overflow: visible;
 }
-
-
-/* =========================================
-   SVG
-========================================= */
 
 .subheading-write-svg {
   display: block;
@@ -49,13 +57,10 @@
 }
 
 
-/* =========================================
-   TEXT
-========================================= */
+/* texte final */
 
 .subheading-write-text {
   font-family: "Young Baroque std", Arial, sans-serif;
-
   font-size: 120px;
   font-weight: 400;
 
@@ -65,38 +70,17 @@
 }
 
 
-/* =========================================
-   WRITING MASK
-========================================= */
+/* path utilisé uniquement comme masque */
 
-.write-mask-path {
+.subheading-mask-path {
   fill: none;
 
   stroke: white;
 
-  /*
-  IMPORTANT :
-  le trait doit être suffisamment large
-  pour révéler toute la hauteur de la typo
-  */
-  stroke-width: 125;
+  stroke-width: 150;
 
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-
-/* =========================================
-   INITIAL ELEMENTS
-========================================= */
-
-.title--tag,
-.heading--80,
-.progress--bottom .max--718,
-.image-wrapper.is--progress1,
-.image-wrapper.is--progress2,
-.stamp {
-  visibility: hidden;
 }
 
 
@@ -112,6 +96,5 @@
 .image-wrapper.is--progress1 img,
 .image-wrapper.is--progress2 img {
   transform: scale(1.14);
-
   will-change: transform;
 }
