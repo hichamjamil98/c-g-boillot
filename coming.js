@@ -1,173 +1,208 @@
 window.addEventListener("load", () => {
 
-  const maskPath = document.querySelector(".subheading-mask-path");
-  const svgText = document.querySelector(".subheading-write-text");
-  const originalSubheading = document.querySelector(".heading--sub120");
+  const subTitle = document.querySelector(".sub--title");
+  const subTitlePath = document.querySelector(".sub--title path");
 
-  if (!maskPath || !svgText || !originalSubheading) return;
-
-
-  /* =========================
-     SUBHEADING COLOR
-  ========================= */
-
-  const subheadingColor = getComputedStyle(originalSubheading).color;
-
-  svgText.style.color = subheadingColor;
+  if (!subTitle || !subTitlePath) return;
 
 
-  /* =========================
-     MASK PATH SETUP
-  ========================= */
-
-  const pathLength = maskPath.getTotalLength();
-
-  gsap.set(maskPath, {
-    strokeDasharray: pathLength,
-    strokeDashoffset: pathLength
-  });
-
-
-  /* =========================
+  /* =========================================
      INITIAL STATES
-  ========================= */
+  ========================================= */
 
   gsap.set(".main-wrapper", {
     autoAlpha: 1
   });
 
+
   gsap.set(".title--tag", {
     autoAlpha: 0,
-    y: 16
+    y: 12
   });
+
 
   gsap.set(".heading--80", {
     autoAlpha: 0,
-    y: 35
+    y: 28
   });
 
-  gsap.set(".subheading-write-wrapper", {
-    autoAlpha: 1
+
+  /*
+    SVG caché de droite vers gauche
+  */
+
+  gsap.set(subTitlePath, {
+    clipPath: "inset(0 100% 0 0)",
+    opacity: 1
   });
+
 
   gsap.set(".progress--bottom .max--718", {
     autoAlpha: 0,
-    y: 25
+    y: 20
   });
+
 
   gsap.set(".image-wrapper.is--progress1", {
     autoAlpha: 0,
-    y: 45
+    y: 30
   });
+
 
   gsap.set(".image-wrapper.is--progress2", {
     autoAlpha: 0,
-    y: 45
+    y: 30
   });
+
 
   gsap.set(".image-wrapper.is--progress1 img", {
-    scale: 1.14
+    scale: 1.08
   });
 
+
   gsap.set(".image-wrapper.is--progress2 img", {
-    scale: 1.14
+    scale: 1.08
   });
+
 
   gsap.set(".stamp", {
     autoAlpha: 0,
-    scale: 0.72,
-    rotation: -12
+    scale: 0.82,
+    rotation: -8
   });
 
 
-  /* =========================
+
+  /* =========================================
      TIMELINE
-  ========================= */
+  ========================================= */
 
   const tl = gsap.timeline({
-    delay: 0.15
+    delay: 0.08
   });
 
 
-  /* TAG */
+
+  /* =========================================
+     TAG
+  ========================================= */
 
   tl.to(".title--tag", {
     autoAlpha: 1,
     y: 0,
-    duration: 0.65,
+
+    duration: 0.42,
+
     ease: "power3.out"
   });
 
 
-  /* MAIN HEADING */
+
+  /* =========================================
+     MAIN HEADING
+  ========================================= */
 
   tl.to(".heading--80", {
     autoAlpha: 1,
     y: 0,
-    duration: 0.95,
+
+    duration: 0.62,
+
     ease: "expo.out"
-  }, "-=0.3");
+  }, "-=0.18");
 
 
-  /* SUBHEADING WRITING */
 
-  tl.to(maskPath, {
-    strokeDashoffset: 0,
-    duration: 2.4,
-    ease: "power1.inOut"
-  }, "-=0.1");
+  /* =========================================
+     SVG WRITING / REVEAL
+  ========================================= */
+
+  tl.to(subTitlePath, {
+    clipPath: "inset(0 0% 0 0)",
+
+    duration: 1.25,
+
+    ease: "power2.inOut"
+  }, "-=0.12");
 
 
-  /* PARAGRAPH */
+
+  /* =========================================
+     PARAGRAPH
+  ========================================= */
 
   tl.to(".progress--bottom .max--718", {
     autoAlpha: 1,
     y: 0,
-    duration: 0.85,
+
+    duration: 0.55,
+
     ease: "power3.out"
   }, "-=0.2");
 
 
-  /* IMAGE 1 */
+
+  /* =========================================
+     IMAGE 1
+  ========================================= */
 
   tl.to(".image-wrapper.is--progress1", {
     autoAlpha: 1,
     y: 0,
-    duration: 1.05,
+
+    duration: 0.65,
+
     ease: "expo.out"
-  }, "-=0.1");
+  }, "-=0.12");
+
 
   tl.to(".image-wrapper.is--progress1 img", {
     scale: 1,
-    duration: 1.7,
+
+    duration: 1.05,
+
     ease: "power3.out"
   }, "<");
 
 
-  /* IMAGE 2 */
+
+  /* =========================================
+     IMAGE 2
+  ========================================= */
 
   tl.to(".image-wrapper.is--progress2", {
     autoAlpha: 1,
     y: 0,
-    duration: 1.05,
+
+    duration: 0.65,
+
     ease: "expo.out"
-  }, "-=0.75");
+  }, "-=0.48");
+
 
   tl.to(".image-wrapper.is--progress2 img", {
     scale: 1,
-    duration: 1.7,
+
+    duration: 1.05,
+
     ease: "power3.out"
   }, "<");
 
 
-  /* STAMP */
+
+  /* =========================================
+     STAMP
+  ========================================= */
 
   tl.to(".stamp", {
     autoAlpha: 1,
+
     scale: 1,
     rotation: 0,
-    duration: 1.1,
-    ease: "back.out(1.4)"
-  }, "-=0.6");
+
+    duration: 0.72,
+
+    ease: "back.out(1.3)"
+  }, "-=0.4");
 
 });

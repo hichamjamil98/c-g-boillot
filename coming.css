@@ -1,5 +1,5 @@
 /* =========================================
-   INITIAL
+   INITIAL STATES
 ========================================= */
 
 .title--tag,
@@ -13,74 +13,19 @@
 
 
 /* =========================================
-   TITLE WRAPPER
+   TITLE SVG
 ========================================= */
 
-.title--wrapper {
-  position: relative;
-}
-
-
-/* =========================================
-   ORIGINAL H2
-   garde uniquement la hauteur/layout
-========================================= */
-
-.heading--sub120 {
-  margin: 0;
-  visibility: hidden;
-}
-
-
-/* =========================================
-   SUBHEADING SVG
-========================================= */
-
-.subheading-write-wrapper {
-  position: absolute;
-
-  left: 0;
-  bottom: 0;
-
-  width: 100%;
-
-  pointer-events: none;
-}
-
-.subheading-write-svg {
+.sub--title {
   display: block;
-
   width: 100%;
   height: auto;
-
   overflow: visible;
 }
 
-
-/* texte final */
-
-.subheading-write-text {
-  font-family: "Young Baroque std", Arial, sans-serif;
-  font-size: 120px;
-  font-weight: 400;
-
+.sub--title path {
   fill: currentColor;
-
-  stroke: none;
-}
-
-
-/* path utilisé uniquement comme masque */
-
-.subheading-mask-path {
-  fill: none;
-
-  stroke: white;
-
-  stroke-width: 150;
-
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  will-change: clip-path, opacity, transform;
 }
 
 
@@ -95,6 +40,19 @@
 
 .image-wrapper.is--progress1 img,
 .image-wrapper.is--progress2 img {
-  transform: scale(1.14);
+  transform: scale(1.08);
   will-change: transform;
+}
+
+
+/* =========================================
+   PERFORMANCE
+========================================= */
+
+.title--tag,
+.heading--80,
+.sub--title,
+.progress--bottom .max--718,
+.stamp {
+  will-change: transform, opacity;
 }
