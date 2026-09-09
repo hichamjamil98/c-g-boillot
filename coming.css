@@ -1,5 +1,5 @@
 /* =========================================
-   MAIN
+   GLOBAL
 ========================================= */
 
 .main-wrapper {
@@ -23,7 +23,7 @@
 
 
 /* =========================================
-   SUBTITLE SVG
+   SVG SUBTITLE
 ========================================= */
 
 .sub--title {
@@ -33,24 +33,43 @@
   overflow: visible;
 
   color: inherit;
+
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    #000 0%,
+    #000 40%,
+    rgba(0, 0, 0, 0.95) 44%,
+    rgba(0, 0, 0, 0.75) 48%,
+    rgba(0, 0, 0, 0.35) 52%,
+    transparent 57%
+  );
+
+  mask-image: linear-gradient(
+    90deg,
+    #000 0%,
+    #000 40%,
+    rgba(0, 0, 0, 0.95) 44%,
+    rgba(0, 0, 0, 0.75) 48%,
+    rgba(0, 0, 0, 0.35) 52%,
+    transparent 57%
+  );
+
+  -webkit-mask-size: 240% 100%;
+  mask-size: 240% 100%;
+
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+
+  -webkit-mask-position: 100% 0;
+  mask-position: 100% 0;
+
+  will-change:
+    -webkit-mask-position,
+    mask-position;
 }
-
-
-/*
-  Keep original SVG color
-*/
 
 .sub--title path {
   fill: currentColor;
-}
-
-
-/*
-  Each path will be animated independently
-*/
-
-.sub--title > g > path {
-  will-change: clip-path;
 }
 
 
@@ -62,7 +81,6 @@
 .image-wrapper.is--progress2 {
   overflow: hidden;
 }
-
 
 .image-wrapper.is--progress1 img,
 .image-wrapper.is--progress2 img {
@@ -98,7 +116,6 @@
   visibility: visible !important;
 }
 
-
 .w-editor .title--tag,
 .w-editor .heading--80,
 .w-editor .progress--bottom .max--718,
@@ -109,7 +126,7 @@
   opacity: 1 !important;
 }
 
-
-.w-editor .sub--title > g > path {
-  clip-path: none !important;
+.w-editor .sub--title {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
 }

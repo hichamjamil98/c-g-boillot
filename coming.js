@@ -10,8 +10,12 @@ window.addEventListener("load", () => {
      ELEMENTS
   ========================================= */
 
-  const main = document.querySelector(".main-wrapper");
-  const subtitle = document.querySelector(".sub--title");
+  const main =
+    document.querySelector(".main-wrapper");
+
+  const subtitle =
+    document.querySelector(".sub--title");
+
 
   if (!main || !subtitle) return;
 
@@ -37,39 +41,55 @@ window.addEventListener("load", () => {
   });
 
 
-  /* SVG hidden from right side */
+  /* SVG initial mask */
 
   gsap.set(subtitle, {
-    clipPath: "inset(0 100% 0 0)"
+    webkitMaskPosition: "100% 0%",
+    maskPosition: "100% 0%"
   });
 
 
-  gsap.set(".progress--bottom .max--718", {
-    autoAlpha: 0,
-    y: 15
-  });
+  gsap.set(
+    ".progress--bottom .max--718",
+    {
+      autoAlpha: 0,
+      y: 15
+    }
+  );
 
 
-  gsap.set(".image-wrapper.is--progress1", {
-    autoAlpha: 0,
-    y: 22
-  });
+  gsap.set(
+    ".image-wrapper.is--progress1",
+    {
+      autoAlpha: 0,
+      y: 22
+    }
+  );
 
 
-  gsap.set(".image-wrapper.is--progress2", {
-    autoAlpha: 0,
-    y: 22
-  });
+  gsap.set(
+    ".image-wrapper.is--progress2",
+    {
+      autoAlpha: 0,
+      y: 22
+    }
+  );
 
 
-  gsap.set(".image-wrapper.is--progress1 img", {
-    scale: 1.06
-  });
+  gsap.set(
+    ".image-wrapper.is--progress1 img",
+    {
+      scale: 1.06
+    }
+  );
 
 
-  gsap.set(".image-wrapper.is--progress2 img", {
-    scale: 1.06
-  });
+  gsap.set(
+    ".image-wrapper.is--progress2 img",
+    {
+      scale: 1.06
+    }
+  );
 
 
   gsap.set(".stamp", {
@@ -80,7 +100,7 @@ window.addEventListener("load", () => {
 
 
   /* =========================================
-     MAIN TIMELINE
+     TIMELINE
   ========================================= */
 
   const tl = gsap.timeline({
@@ -93,12 +113,14 @@ window.addEventListener("load", () => {
   ========================================= */
 
   tl.to(".title--tag", {
+
     autoAlpha: 1,
     y: 0,
 
-    duration: 0.32,
+    duration: 0.34,
 
     ease: "power3.out"
+
   });
 
 
@@ -107,104 +129,163 @@ window.addEventListener("load", () => {
   ========================================= */
 
   tl.to(".heading--80", {
+
     autoAlpha: 1,
     y: 0,
 
     duration: 0.48,
 
     ease: "expo.out"
+
   }, "-=0.12");
 
 
   /* =========================================
      ARRIVE BIENTÔT
-     SIMPLE LEFT → RIGHT
+     SMOOTH PEN REVEAL
   ========================================= */
 
   tl.to(subtitle, {
 
-    clipPath: "inset(0 0% 0 0)",
+    webkitMaskPosition: "0% 0%",
+    maskPosition: "0% 0%",
 
-    duration: 1.55,
+    duration: 1.85,
 
-    ease: "none"
+    ease: "sine.inOut"
 
   }, "-=0.02");
+
+
+  /* remove mask after completion */
+
+  tl.set(subtitle, {
+    webkitMaskImage: "none",
+    maskImage: "none"
+  });
 
 
   /* =========================================
      PARAGRAPH
   ========================================= */
 
-  tl.to(".progress--bottom .max--718", {
-    autoAlpha: 1,
-    y: 0,
+  tl.to(
+    ".progress--bottom .max--718",
+    {
 
-    duration: 0.42,
+      autoAlpha: 1,
+      y: 0,
 
-    ease: "power3.out"
-  }, "-=0.05");
+      duration: 0.42,
+
+      ease: "power3.out"
+
+    },
+
+    "-=0.08"
+
+  );
 
 
   /* =========================================
      IMAGE 1
   ========================================= */
 
-  tl.to(".image-wrapper.is--progress1", {
-    autoAlpha: 1,
-    y: 0,
+  tl.to(
+    ".image-wrapper.is--progress1",
+    {
 
-    duration: 0.5,
+      autoAlpha: 1,
+      y: 0,
 
-    ease: "expo.out"
-  }, "-=0.05");
+      duration: 0.5,
+
+      ease: "expo.out"
+
+    },
+
+    "-=0.05"
+
+  );
 
 
-  tl.to(".image-wrapper.is--progress1 img", {
-    scale: 1,
+  tl.to(
+    ".image-wrapper.is--progress1 img",
+    {
 
-    duration: 0.82,
+      scale: 1,
 
-    ease: "power3.out"
-  }, "<");
+      duration: 0.82,
+
+      ease: "power3.out"
+
+    },
+
+    "<"
+
+  );
 
 
   /* =========================================
      IMAGE 2
   ========================================= */
 
-  tl.to(".image-wrapper.is--progress2", {
-    autoAlpha: 1,
-    y: 0,
+  tl.to(
+    ".image-wrapper.is--progress2",
+    {
 
-    duration: 0.5,
+      autoAlpha: 1,
+      y: 0,
 
-    ease: "expo.out"
-  }, "-=0.36");
+      duration: 0.5,
+
+      ease: "expo.out"
+
+    },
+
+    "-=0.36"
+
+  );
 
 
-  tl.to(".image-wrapper.is--progress2 img", {
-    scale: 1,
+  tl.to(
+    ".image-wrapper.is--progress2 img",
+    {
 
-    duration: 0.82,
+      scale: 1,
 
-    ease: "power3.out"
-  }, "<");
+      duration: 0.82,
+
+      ease: "power3.out"
+
+    },
+
+    "<"
+
+  );
 
 
   /* =========================================
      STAMP
   ========================================= */
 
-  tl.to(".stamp", {
-    autoAlpha: 1,
+  tl.to(
+    ".stamp",
+    {
 
-    scale: 1,
-    rotation: 0,
+      autoAlpha: 1,
 
-    duration: 0.52,
+      scale: 1,
+      rotation: 0,
 
-    ease: "back.out(1.2)"
-  }, "-=0.28");
+      duration: 0.52,
+
+      ease: "back.out(1.2)"
+
+    },
+
+    "-=0.28"
+
+  );
 
 });
