@@ -21,26 +21,15 @@
   width: 100%;
   height: auto;
   overflow: visible;
+
+  /* état initial */
+  clip-path: inset(0 100% 0 0);
+
+  will-change: clip-path;
 }
 
 .sub--title > path {
   fill: currentColor;
-}
-
-
-/* =========================================
-   WRITING MASK
-========================================= */
-
-.sub-writing-mask-rect {
-  will-change: width;
-}
-
-
-/* petit bord doux au niveau de la "plume" */
-
-.sub-writing-edge {
-  will-change: transform;
 }
 
 
@@ -66,7 +55,6 @@
 
 .title--tag,
 .heading--80,
-.sub--title,
 .progress--bottom .max--718,
 .stamp {
   will-change: transform, opacity;
@@ -85,4 +73,8 @@
 .w-editor .stamp {
   visibility: visible !important;
   opacity: 1 !important;
+}
+
+.w-editor .sub--title {
+  clip-path: none !important;
 }
