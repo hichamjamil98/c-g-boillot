@@ -1,5 +1,5 @@
 /* =========================================
-   GLOBAL / INITIAL
+   MAIN
 ========================================= */
 
 .main-wrapper {
@@ -9,7 +9,7 @@
 
 
 /* =========================================
-   INITIAL ELEMENT STATES
+   INITIAL STATES
 ========================================= */
 
 .title--tag,
@@ -23,7 +23,7 @@
 
 
 /* =========================================
-   SVG SUBTITLE
+   SUBTITLE SVG
 ========================================= */
 
 .sub--title {
@@ -31,22 +31,25 @@
   width: 100%;
   height: auto;
   overflow: visible;
+
   color: inherit;
 }
 
 
-/* keep original SVG color */
+/*
+  Keep original SVG color
+*/
 
-.sub--title .letter path {
+.sub--title path {
   fill: currentColor;
 }
 
 
-/* each letter can be revealed independently */
+/*
+  Each path will be animated independently
+*/
 
-.sub--title .letter {
-  transform-box: fill-box;
-  transform-origin: center;
+.sub--title > g > path {
   will-change: clip-path;
 }
 
@@ -60,12 +63,16 @@
   overflow: hidden;
 }
 
+
 .image-wrapper.is--progress1 img,
 .image-wrapper.is--progress2 img {
   width: 100%;
   height: 100%;
+
   object-fit: cover;
+
   transform: scale(1.06);
+
   will-change: transform;
 }
 
@@ -91,6 +98,7 @@
   visibility: visible !important;
 }
 
+
 .w-editor .title--tag,
 .w-editor .heading--80,
 .w-editor .progress--bottom .max--718,
@@ -101,6 +109,7 @@
   opacity: 1 !important;
 }
 
-.w-editor .sub--title .letter {
+
+.w-editor .sub--title > g > path {
   clip-path: none !important;
 }

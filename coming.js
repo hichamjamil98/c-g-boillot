@@ -1,11 +1,11 @@
 window.addEventListener("load", () => {
 
   /* =========================================
-     SAFETY
+     CHECK GSAP
   ========================================= */
 
   if (typeof gsap === "undefined") {
-    console.warn("GSAP is not loaded.");
+    console.warn("GSAP is not loaded");
     return;
   }
 
@@ -14,20 +14,49 @@ window.addEventListener("load", () => {
      ELEMENTS
   ========================================= */
 
-  const main = document.querySelector(".main-wrapper");
-  const svg = document.querySelector(".sub--title");
+  const main =
+    document.querySelector(".main-wrapper");
+
+  const svg =
+    document.querySelector(".sub--title");
+
 
   if (!main || !svg) return;
 
 
-  const letters = Array.from(
-    svg.querySelectorAll(".letter")
+  /*
+    IMPORTANT:
+    target the paths directly.
+    
+    No .letter class needed.
+  */
+
+  let letters = Array.from(
+    svg.querySelectorAll(":scope > g > path")
   );
 
 
+  /*
+    fallback in case SVG structure changes
+  */
+
   if (!letters.length) {
+
+    letters = Array.from(
+      svg.querySelectorAll("path")
+    ).filter(path => {
+
+      return !path.closest("defs");
+
+    });
+
+  }
+
+
+  if (!letters.length) {
+
     console.warn(
-      "No .letter elements found inside .sub--title"
+      "No drawable paths found inside .sub--title"
     );
 
     gsap.set(main, {
@@ -39,7 +68,31 @@ window.addEventListener("load", () => {
 
 
   /* =========================================
-     INITIAL STATES
+     SORT LEFT → RIGHT
+  ========================================= */
+
+  letters.sort((a, b) => {
+
+    try {
+
+      return (
+        a.getBBox().x -
+        b.getBBox().x
+      );
+
+    }
+
+    catch (e) {
+
+      return 0;
+
+    }
+
+  });
+
+
+  /* =========================================
+     INITIAL PAGE STATES
   ========================================= */
 
   gsap.set(main, {
@@ -48,60 +101,101 @@ window.addEventListener("load", () => {
 
 
   gsap.set(".title--tag", {
+
     autoAlpha: 0,
-    y: 10
+
+    y: 8
+
   });
 
 
   gsap.set(".heading--80", {
+
     autoAlpha: 0,
-    y: 24
+
+    y: 20
+
   });
 
 
-  gsap.set(".progress--bottom .max--718", {
-    autoAlpha: 0,
-    y: 18
-  });
+  gsap.set(
+    ".progress--bottom .max--718",
+    {
+
+      autoAlpha: 0,
+
+      y: 15
+
+    }
+  );
 
 
-  gsap.set(".image-wrapper.is--progress1", {
-    autoAlpha: 0,
-    y: 24
-  });
+  gsap.set(
+    ".image-wrapper.is--progress1",
+    {
+
+      autoAlpha: 0,
+
+      y: 22
+
+    }
+  );
 
 
-  gsap.set(".image-wrapper.is--progress2", {
-    autoAlpha: 0,
-    y: 24
-  });
+  gsap.set(
+    ".image-wrapper.is--progress2",
+    {
+
+      autoAlpha: 0,
+
+      y: 22
+
+    }
+  );
 
 
-  gsap.set(".image-wrapper.is--progress1 img", {
-    scale: 1.06
-  });
+  gsap.set(
+    ".image-wrapper.is--progress1 img",
+    {
+
+      scale: 1.06
+
+    }
+  );
 
 
-  gsap.set(".image-wrapper.is--progress2 img", {
-    scale: 1.06
-  });
+  gsap.set(
+    ".image-wrapper.is--progress2 img",
+    {
+
+      scale: 1.06
+
+    }
+  );
 
 
   gsap.set(".stamp", {
+
     autoAlpha: 0,
+
     scale: 0.88,
+
     rotation: -5
+
   });
 
 
   /* =========================================
-     LETTER INITIAL STATE
+     HIDE EVERY SVG PATH
   ========================================= */
 
-  letters.forEach((letter) => {
+  letters.forEach(path => {
 
-    gsap.set(letter, {
-      clipPath: "inset(0 100% 0 0)"
+    gsap.set(path, {
+
+      clipPath:
+        "inset(0 100% 0 0)"
+
     });
 
   });
@@ -112,20 +206,23 @@ window.addEventListener("load", () => {
   ========================================= */
 
   const tl = gsap.timeline({
+
     delay: 0.05
+
   });
 
 
   /* =========================================
-     TAG
+     C&G BOILLOT
   ========================================= */
 
   tl.to(".title--tag", {
 
     autoAlpha: 1,
+
     y: 0,
 
-    duration: 0.34,
+    duration: 0.32,
 
     ease: "power3.out"
 
@@ -133,15 +230,16 @@ window.addEventListener("load", () => {
 
 
   /* =========================================
-     HEADING
+     NOTRE NOUVEAU SITE
   ========================================= */
 
   tl.to(".heading--80", {
 
     autoAlpha: 1,
+
     y: 0,
 
-    duration: 0.5,
+    duration: 0.48,
 
     ease: "expo.out"
 
@@ -149,51 +247,74 @@ window.addEventListener("load", () => {
 
 
   /* =========================================
-     HANDWRITING
-     LETTER BY LETTER
+     ARRIVE BIENTÔT
+     
+     PATH BY PATH
+     LEFT → RIGHT
   ========================================= */
 
-  letters.forEach((letter, index) => {
+  letters.forEach((path, index) => {
 
-    /*
-      wider letters take slightly longer
-    */
-
-    let duration = 0.15;
+    let width = 20;
 
 
     try {
 
-      const box = letter.getBBox();
-
-      duration = gsap.utils.clamp(
-        0.11,
-        0.22,
-        box.width / 120
-      );
-
-    } catch (e) {
-
-      duration = 0.15;
+      width =
+        path.getBBox().width;
 
     }
 
+    catch (e) {}
+
 
     /*
-      continuous overlap:
-      next letter starts slightly before
-      previous one finishes
+      Bigger glyphs take slightly longer
     */
 
-    tl.to(letter, {
+    const duration =
+      gsap.utils.clamp(
 
-      clipPath: "inset(0 0% 0 0)",
+        0.10,
 
-      duration: duration,
+        0.24,
 
-      ease: "none"
+        width / 100
 
-    }, index === 0 ? "-=0.03" : "-=0.045");
+      );
+
+
+    /*
+      Start next letter before previous
+      is completely finished.
+      
+      This gives continuous writing.
+    */
+
+    const position =
+      index === 0
+        ? "-=0.02"
+        : "-=0.055";
+
+
+    tl.to(
+
+      path,
+
+      {
+
+        clipPath:
+          "inset(0 0% 0 0)",
+
+        duration,
+
+        ease: "none"
+
+      },
+
+      position
+
+    );
 
   });
 
@@ -202,87 +323,127 @@ window.addEventListener("load", () => {
      PARAGRAPH
   ========================================= */
 
-  tl.to(".progress--bottom .max--718", {
+  tl.to(
+    ".progress--bottom .max--718",
+    {
 
-    autoAlpha: 1,
-    y: 0,
+      autoAlpha: 1,
 
-    duration: 0.42,
+      y: 0,
 
-    ease: "power3.out"
+      duration: 0.42,
 
-  }, "-=0.05");
+      ease: "power3.out"
+
+    },
+
+    "-=0.04"
+
+  );
 
 
   /* =========================================
      IMAGE 1
   ========================================= */
 
-  tl.to(".image-wrapper.is--progress1", {
+  tl.to(
+    ".image-wrapper.is--progress1",
+    {
 
-    autoAlpha: 1,
-    y: 0,
+      autoAlpha: 1,
 
-    duration: 0.5,
+      y: 0,
 
-    ease: "expo.out"
+      duration: 0.5,
 
-  }, "-=0.05");
+      ease: "expo.out"
+
+    },
+
+    "-=0.05"
+
+  );
 
 
-  tl.to(".image-wrapper.is--progress1 img", {
+  tl.to(
+    ".image-wrapper.is--progress1 img",
+    {
 
-    scale: 1,
+      scale: 1,
 
-    duration: 0.82,
+      duration: 0.82,
 
-    ease: "power3.out"
+      ease: "power3.out"
 
-  }, "<");
+    },
+
+    "<"
+
+  );
 
 
   /* =========================================
      IMAGE 2
   ========================================= */
 
-  tl.to(".image-wrapper.is--progress2", {
+  tl.to(
+    ".image-wrapper.is--progress2",
+    {
 
-    autoAlpha: 1,
-    y: 0,
+      autoAlpha: 1,
 
-    duration: 0.5,
+      y: 0,
 
-    ease: "expo.out"
+      duration: 0.5,
 
-  }, "-=0.36");
+      ease: "expo.out"
+
+    },
+
+    "-=0.36"
+
+  );
 
 
-  tl.to(".image-wrapper.is--progress2 img", {
+  tl.to(
+    ".image-wrapper.is--progress2 img",
+    {
 
-    scale: 1,
+      scale: 1,
 
-    duration: 0.82,
+      duration: 0.82,
 
-    ease: "power3.out"
+      ease: "power3.out"
 
-  }, "<");
+    },
+
+    "<"
+
+  );
 
 
   /* =========================================
      STAMP
   ========================================= */
 
-  tl.to(".stamp", {
+  tl.to(
+    ".stamp",
+    {
 
-    autoAlpha: 1,
+      autoAlpha: 1,
 
-    scale: 1,
-    rotation: 0,
+      scale: 1,
 
-    duration: 0.55,
+      rotation: 0,
 
-    ease: "back.out(1.2)"
+      duration: 0.52,
 
-  }, "-=0.3");
+      ease: "back.out(1.2)"
+
+    },
+
+    "-=0.28"
+
+  );
 
 });
