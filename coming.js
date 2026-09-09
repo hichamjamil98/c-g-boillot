@@ -1,208 +1,79 @@
 window.addEventListener("load", () => {
 
-  if (typeof gsap === "undefined") return;
+  /* =========================================
+     SAFETY
+  ========================================= */
+
+  if (typeof gsap === "undefined") {
+    console.warn("GSAP is not loaded.");
+    return;
+  }
 
 
   /* =========================================
      ELEMENTS
   ========================================= */
 
+  const main = document.querySelector(".main-wrapper");
   const svg = document.querySelector(".sub--title");
 
-  if (!svg) return;
+  if (!main || !svg) return;
+
 
   const letters = Array.from(
     svg.querySelectorAll(".letter")
   );
 
-  if (!letters.length) return;
 
-
-  const SVG_NS =
-    "http://www.w3.org/2000/svg";
-
-
-  /* =========================================
-     CLEAN OLD GENERATED DEFS
-  ========================================= */
-
-  const oldDefs =
-    svg.querySelector(".letter-animation-defs");
-
-  if (oldDefs) {
-    oldDefs.remove();
-  }
-
-
-  /* =========================================
-     CREATE DEFS
-  ========================================= */
-
-  const defs =
-    document.createElementNS(
-      SVG_NS,
-      "defs"
+  if (!letters.length) {
+    console.warn(
+      "No .letter elements found inside .sub--title"
     );
 
-  defs.setAttribute(
-    "class",
-    "letter-animation-defs"
-  );
-
-
-  svg.insertBefore(
-    defs,
-    svg.firstChild
-  );
-
-
-  /* =========================================
-     CREATE ONE CLIP FOR EACH LETTER
-  ========================================= */
-
-  const reveals = [];
-
-
-  letters.forEach((letter, index) => {
-
-    const box = letter.getBBox();
-
-    const padding = 3;
-
-
-    /* -------------------------
-       clipPath
-    ------------------------- */
-
-    const clipPath =
-      document.createElementNS(
-        SVG_NS,
-        "clipPath"
-      );
-
-
-    const clipId =
-      `letter-reveal-${index}`;
-
-
-    clipPath.setAttribute(
-      "id",
-      clipId
-    );
-
-
-    clipPath.setAttribute(
-      "clipPathUnits",
-      "userSpaceOnUse"
-    );
-
-
-    /* -------------------------
-       reveal rect
-    ------------------------- */
-
-    const rect =
-      document.createElementNS(
-        SVG_NS,
-        "rect"
-      );
-
-
-    rect.setAttribute(
-      "class",
-      "letter-reveal-rect"
-    );
-
-
-    rect.setAttribute(
-      "x",
-      box.x - padding
-    );
-
-
-    rect.setAttribute(
-      "y",
-      box.y - padding
-    );
-
-
-    rect.setAttribute(
-      "width",
-      "0"
-    );
-
-
-    rect.setAttribute(
-      "height",
-      box.height + padding * 2
-    );
-
-
-    clipPath.appendChild(rect);
-
-    defs.appendChild(clipPath);
-
-
-    /* -------------------------
-       apply clip
-    ------------------------- */
-
-    letter.setAttribute(
-      "clip-path",
-      `url(#${clipId})`
-    );
-
-
-    reveals.push({
-      rect,
-      box,
-      width: box.width + padding * 2
+    gsap.set(main, {
+      autoAlpha: 1
     });
 
-  });
+    return;
+  }
 
 
   /* =========================================
      INITIAL STATES
   ========================================= */
 
-  gsap.set(".main-wrapper", {
+  gsap.set(main, {
     autoAlpha: 1
   });
 
 
   gsap.set(".title--tag", {
     autoAlpha: 0,
-    y: 8
+    y: 10
   });
 
 
   gsap.set(".heading--80", {
     autoAlpha: 0,
-    y: 20
-  });
-
-
-  gsap.set(".sub--title", {
-    autoAlpha: 1
+    y: 24
   });
 
 
   gsap.set(".progress--bottom .max--718", {
     autoAlpha: 0,
-    y: 15
+    y: 18
   });
 
 
   gsap.set(".image-wrapper.is--progress1", {
     autoAlpha: 0,
-    y: 22
+    y: 24
   });
 
 
   gsap.set(".image-wrapper.is--progress2", {
     autoAlpha: 0,
-    y: 22
+    y: 24
   });
 
 
@@ -224,6 +95,19 @@ window.addEventListener("load", () => {
 
 
   /* =========================================
+     LETTER INITIAL STATE
+  ========================================= */
+
+  letters.forEach((letter) => {
+
+    gsap.set(letter, {
+      clipPath: "inset(0 100% 0 0)"
+    });
+
+  });
+
+
+  /* =========================================
      MAIN TIMELINE
   ========================================= */
 
@@ -233,16 +117,15 @@ window.addEventListener("load", () => {
 
 
   /* =========================================
-     C&G BOILLOT
+     TAG
   ========================================= */
 
   tl.to(".title--tag", {
 
     autoAlpha: 1,
-
     y: 0,
 
-    duration: 0.32,
+    duration: 0.34,
 
     ease: "power3.out"
 
@@ -250,16 +133,15 @@ window.addEventListener("load", () => {
 
 
   /* =========================================
-     NOTRE NOUVEAU SITE
+     HEADING
   ========================================= */
 
   tl.to(".heading--80", {
 
     autoAlpha: 1,
-
     y: 0,
 
-    duration: 0.46,
+    duration: 0.5,
 
     ease: "expo.out"
 
@@ -267,59 +149,51 @@ window.addEventListener("load", () => {
 
 
   /* =========================================
-     ARRIVE BIENTÔT
+     HANDWRITING
      LETTER BY LETTER
   ========================================= */
 
-  const writingStart =
-    tl.duration() - 0.03;
-
-
-  reveals.forEach((item, index) => {
+  letters.forEach((letter, index) => {
 
     /*
-      letters are not all same width,
-      so duration follows their size
+      wider letters take slightly longer
     */
 
-    const duration =
-      gsap.utils.clamp(
-        0.09,
-        0.26,
-        item.box.width / 95
+    let duration = 0.15;
+
+
+    try {
+
+      const box = letter.getBBox();
+
+      duration = gsap.utils.clamp(
+        0.11,
+        0.22,
+        box.width / 120
       );
 
+    } catch (e) {
+
+      duration = 0.15;
+
+    }
+
 
     /*
-      small overlap between letters:
-      gives continuous pen feeling
+      continuous overlap:
+      next letter starts slightly before
+      previous one finishes
     */
 
-    const overlap =
-      0.045;
+    tl.to(letter, {
 
+      clipPath: "inset(0 0% 0 0)",
 
-    const start =
-      index === 0
-        ? writingStart
-        : `>-=${overlap}`;
+      duration: duration,
 
+      ease: "none"
 
-    tl.to(
-      item.rect,
-      {
-
-        attr: {
-          width: item.width
-        },
-
-        duration: duration,
-
-        ease: "none"
-
-      },
-      start
-    );
+    }, index === 0 ? "-=0.03" : "-=0.045");
 
   });
 
@@ -328,127 +202,87 @@ window.addEventListener("load", () => {
      PARAGRAPH
   ========================================= */
 
-  tl.to(
-    ".progress--bottom .max--718",
-    {
+  tl.to(".progress--bottom .max--718", {
 
-      autoAlpha: 1,
+    autoAlpha: 1,
+    y: 0,
 
-      y: 0,
+    duration: 0.42,
 
-      duration: 0.4,
+    ease: "power3.out"
 
-      ease: "power3.out"
-
-    },
-
-    "-=0.05"
-
-  );
+  }, "-=0.05");
 
 
   /* =========================================
      IMAGE 1
   ========================================= */
 
-  tl.to(
-    ".image-wrapper.is--progress1",
-    {
+  tl.to(".image-wrapper.is--progress1", {
 
-      autoAlpha: 1,
+    autoAlpha: 1,
+    y: 0,
 
-      y: 0,
+    duration: 0.5,
 
-      duration: 0.48,
+    ease: "expo.out"
 
-      ease: "expo.out"
-
-    },
-
-    "-=0.05"
-
-  );
+  }, "-=0.05");
 
 
-  tl.to(
-    ".image-wrapper.is--progress1 img",
-    {
+  tl.to(".image-wrapper.is--progress1 img", {
 
-      scale: 1,
+    scale: 1,
 
-      duration: 0.78,
+    duration: 0.82,
 
-      ease: "power3.out"
+    ease: "power3.out"
 
-    },
-
-    "<"
-
-  );
+  }, "<");
 
 
   /* =========================================
      IMAGE 2
   ========================================= */
 
-  tl.to(
-    ".image-wrapper.is--progress2",
-    {
+  tl.to(".image-wrapper.is--progress2", {
 
-      autoAlpha: 1,
+    autoAlpha: 1,
+    y: 0,
 
-      y: 0,
+    duration: 0.5,
 
-      duration: 0.48,
+    ease: "expo.out"
 
-      ease: "expo.out"
-
-    },
-
-    "-=0.35"
-
-  );
+  }, "-=0.36");
 
 
-  tl.to(
-    ".image-wrapper.is--progress2 img",
-    {
+  tl.to(".image-wrapper.is--progress2 img", {
 
-      scale: 1,
+    scale: 1,
 
-      duration: 0.78,
+    duration: 0.82,
 
-      ease: "power3.out"
+    ease: "power3.out"
 
-    },
-
-    "<"
-
-  );
+  }, "<");
 
 
   /* =========================================
      STAMP
   ========================================= */
 
-  tl.to(
-    ".stamp",
-    {
+  tl.to(".stamp", {
 
-      autoAlpha: 1,
+    autoAlpha: 1,
 
-      scale: 1,
+    scale: 1,
+    rotation: 0,
 
-      rotation: 0,
+    duration: 0.55,
 
-      duration: 0.5,
+    ease: "back.out(1.2)"
 
-      ease: "back.out(1.2)"
-
-    },
-
-    "-=0.28"
-
-  );
+  }, "-=0.3");
 
 });
