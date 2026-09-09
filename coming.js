@@ -1,21 +1,32 @@
 window.addEventListener("load", () => {
 
-  const svg = document.querySelector(".sub--title");
-  const originalPath = svg?.querySelector(":scope > path");
-
-  if (!svg || !originalPath || typeof gsap === "undefined") {
-    return;
-  }
-
-  const SVG_NS = "http://www.w3.org/2000/svg";
+  if (typeof gsap === "undefined") return;
 
 
   /* =========================================
-     CLEAN PREVIOUS MASK
-     useful in Webflow preview / reload
+     ELEMENTS
   ========================================= */
 
-  const oldDefs = svg.querySelector(".writing-defs");
+  const svg = document.querySelector(".sub--title");
+
+  if (!svg) return;
+
+  const originalPath =
+    svg.querySelector(":scope > path");
+
+  if (!originalPath) return;
+
+
+  const SVG_NS =
+    "http://www.w3.org/2000/svg";
+
+
+  /* =========================================
+     REMOVE OLD GENERATED MASK
+  ========================================= */
+
+  const oldDefs =
+    svg.querySelector(".sub-writing-defs");
 
   if (oldDefs) {
     oldDefs.remove();
@@ -25,40 +36,93 @@ window.addEventListener("load", () => {
 
 
   /* =========================================
-     CREATE MASK
+     GET VIEWBOX
   ========================================= */
 
-  const defs = document.createElementNS(
-    SVG_NS,
-    "defs"
-  );
+  const viewBox = svg.viewBox.baseVal;
+
+  const svgX = viewBox.x;
+  const svgY = viewBox.y;
+  const svgWidth = viewBox.width;
+  const svgHeight = viewBox.height;
+
+
+  /* =========================================
+     CREATE DEFS
+  ========================================= */
+
+  const defs =
+    document.createElementNS(
+      SVG_NS,
+      "defs"
+    );
 
   defs.setAttribute(
     "class",
-    "writing-defs"
+    "sub-writing-defs"
   );
 
 
-  const mask = document.createElementNS(
-    SVG_NS,
-    "mask"
+  /* =========================================
+     SOFT EDGE FILTER
+  ========================================= */
+
+  const filter =
+    document.createElementNS(
+      SVG_NS,
+      "filter"
+    );
+
+  filter.setAttribute(
+    "id",
+    "sub-writing-blur"
   );
 
+  filter.setAttribute(
+    "x",
+    "-50%"
+  );
+
+  filter.setAttribute(
+    "width",
+    "200%"
+  );
+
+
+  const blur =
+    document.createElementNS(
+      SVG_NS,
+      "feGaussianBlur"
+    );
+
+  blur.setAttribute(
+    "stdDeviation",
+    "2"
+  );
+
+
+  filter.appendChild(blur);
+
+  defs.appendChild(filter);
+
+
+  /* =========================================
+     MASK
+  ========================================= */
+
+  const mask =
+    document.createElementNS(
+      SVG_NS,
+      "mask"
+    );
 
   const maskId =
-    "sub-title-writing-mask-" +
-    Math.random().toString(36).slice(2, 8);
-
+    "sub-writing-mask";
 
   mask.setAttribute(
     "id",
     maskId
   );
-
-
-  /*
-    Use SVG coordinates directly.
-  */
 
   mask.setAttribute(
     "maskUnits",
@@ -66,110 +130,99 @@ window.addEventListener("load", () => {
   );
 
 
-  /*
-    White = visible
-    Black = hidden
-  */
+  /* =========================================
+     MAIN REVEAL RECT
+  ========================================= */
 
-  const blackBackground =
+  const revealRect =
     document.createElementNS(
       SVG_NS,
       "rect"
     );
 
-
-  const viewBox =
-    svg.viewBox.baseVal;
-
-
-  blackBackground.setAttribute(
-    "x",
-    viewBox.x
-  );
-
-  blackBackground.setAttribute(
-    "y",
-    viewBox.y
-  );
-
-  blackBackground.setAttribute(
-    "width",
-    viewBox.width
-  );
-
-  blackBackground.setAttribute(
-    "height",
-    viewBox.height
-  );
-
-  blackBackground.setAttribute(
-    "fill",
-    "black"
-  );
-
-
-  mask.appendChild(
-    blackBackground
-  );
-
-
-  /* =========================================
-     CLONE ORIGINAL PATH
-  ========================================= */
-
-  const writePath =
-    originalPath.cloneNode(true);
-
-
-  writePath.removeAttribute("fill");
-  writePath.removeAttribute("mask");
-
-
-  writePath.setAttribute(
+  revealRect.setAttribute(
     "class",
-    "write-mask-path"
+    "sub-writing-mask-rect"
   );
 
+  revealRect.setAttribute(
+    "x",
+    svgX
+  );
 
-  writePath.setAttribute(
+  revealRect.setAttribute(
+    "y",
+    svgY - 5
+  );
+
+  revealRect.setAttribute(
+    "width",
+    "0"
+  );
+
+  revealRect.setAttribute(
+    "height",
+    svgHeight + 10
+  );
+
+  revealRect.setAttribute(
     "fill",
-    "none"
-  );
-
-
-  writePath.setAttribute(
-    "stroke",
     "white"
   );
 
 
-  writePath.setAttribute(
-    "stroke-width",
-    "10"
+  mask.appendChild(revealRect);
+
+
+  /* =========================================
+     SOFT PEN EDGE
+  ========================================= */
+
+  const edge =
+    document.createElementNS(
+      SVG_NS,
+      "rect"
+    );
+
+  edge.setAttribute(
+    "class",
+    "sub-writing-edge"
+  );
+
+  edge.setAttribute(
+    "x",
+    svgX
+  );
+
+  edge.setAttribute(
+    "y",
+    svgY - 10
+  );
+
+  edge.setAttribute(
+    "width",
+    "12"
+  );
+
+  edge.setAttribute(
+    "height",
+    svgHeight + 20
+  );
+
+  edge.setAttribute(
+    "fill",
+    "white"
+  );
+
+  edge.setAttribute(
+    "filter",
+    "url(#sub-writing-blur)"
   );
 
 
-  writePath.setAttribute(
-    "stroke-linecap",
-    "round"
-  );
+  mask.appendChild(edge);
 
-
-  writePath.setAttribute(
-    "stroke-linejoin",
-    "round"
-  );
-
-
-  mask.appendChild(
-    writePath
-  );
-
-
-  defs.appendChild(
-    mask
-  );
-
+  defs.appendChild(mask);
 
   svg.insertBefore(
     defs,
@@ -188,26 +241,7 @@ window.addEventListener("load", () => {
 
 
   /* =========================================
-     PATH LENGTH
-  ========================================= */
-
-  const pathLength =
-    writePath.getTotalLength();
-
-
-  gsap.set(writePath, {
-
-    strokeDasharray:
-      `${pathLength} ${pathLength}`,
-
-    strokeDashoffset:
-      pathLength
-
-  });
-
-
-  /* =========================================
-     INITIAL PAGE STATES
+     INITIAL STATES
   ========================================= */
 
   gsap.set(".main-wrapper", {
@@ -217,13 +251,13 @@ window.addEventListener("load", () => {
 
   gsap.set(".title--tag", {
     autoAlpha: 0,
-    y: 10
+    y: 8
   });
 
 
   gsap.set(".heading--80", {
     autoAlpha: 0,
-    y: 24
+    y: 20
   });
 
 
@@ -232,11 +266,24 @@ window.addEventListener("load", () => {
   });
 
 
+  gsap.set(revealRect, {
+    attr: {
+      width: 0
+    }
+  });
+
+
+  gsap.set(edge, {
+    x: 0,
+    autoAlpha: 1
+  });
+
+
   gsap.set(
     ".progress--bottom .max--718",
     {
       autoAlpha: 0,
-      y: 18
+      y: 15
     }
   );
 
@@ -245,7 +292,7 @@ window.addEventListener("load", () => {
     ".image-wrapper.is--progress1",
     {
       autoAlpha: 0,
-      y: 28
+      y: 22
     }
   );
 
@@ -254,7 +301,7 @@ window.addEventListener("load", () => {
     ".image-wrapper.is--progress2",
     {
       autoAlpha: 0,
-      y: 28
+      y: 22
     }
   );
 
@@ -262,7 +309,7 @@ window.addEventListener("load", () => {
   gsap.set(
     ".image-wrapper.is--progress1 img",
     {
-      scale: 1.08
+      scale: 1.06
     }
   );
 
@@ -270,35 +317,36 @@ window.addEventListener("load", () => {
   gsap.set(
     ".image-wrapper.is--progress2 img",
     {
-      scale: 1.08
+      scale: 1.06
     }
   );
 
 
   gsap.set(".stamp", {
     autoAlpha: 0,
-    scale: 0.85,
-    rotation: -7
-  });
+    scale: 0.88,
+    rotation: -5
+  );
 
 
   /* =========================================
      TIMELINE
   ========================================= */
 
-  const tl = gsap.timeline({
+  const tl =
+    gsap.timeline({
 
-    delay: 0.05,
+      delay: 0.05,
 
-    defaults: {
-      ease: "power3.out"
-    }
+      defaults: {
+        ease: "power3.out"
+      }
 
-  });
+    });
 
 
   /* =========================================
-     TAG
+     C&G BOILLOT
   ========================================= */
 
   tl.to(".title--tag", {
@@ -307,13 +355,13 @@ window.addEventListener("load", () => {
 
     y: 0,
 
-    duration: 0.35
+    duration: 0.32
 
   });
 
 
   /* =========================================
-     MAIN HEADING
+     NOTRE NOUVEAU SITE
   ========================================= */
 
   tl.to(".heading--80", {
@@ -322,7 +370,7 @@ window.addEventListener("load", () => {
 
     y: 0,
 
-    duration: 0.52,
+    duration: 0.46,
 
     ease: "expo.out"
 
@@ -330,18 +378,55 @@ window.addEventListener("load", () => {
 
 
   /* =========================================
-     HANDWRITTEN SVG
+     ARRIVE BIENTÔT
+     CONTINUOUS PEN WRITING
   ========================================= */
 
-  tl.to(writePath, {
+  tl.to(revealRect, {
 
-    strokeDashoffset: 0,
+    attr: {
+      width: svgWidth
+    },
 
-    duration: 1.45,
+    duration: 1.65,
 
-    ease: "power1.inOut"
+    /*
+      quasiment linéaire :
+      donne une impression de main qui écrit
+    */
+    ease: "none"
 
-  }, "-=0.05");
+  }, "-=0.03");
+
+
+  /*
+    la pointe douce suit exactement
+    le bord du reveal
+  */
+
+  tl.to(edge, {
+
+    x: svgWidth - 8,
+
+    duration: 1.65,
+
+    ease: "none"
+
+  }, "<");
+
+
+  /*
+    léger fade de la pointe quand
+    l'écriture est terminée
+  */
+
+  tl.to(edge, {
+
+    autoAlpha: 0,
+
+    duration: 0.15
+
+  });
 
 
   /* =========================================
@@ -356,13 +441,13 @@ window.addEventListener("load", () => {
 
       y: 0,
 
-      duration: 0.45,
+      duration: 0.4,
 
       ease: "power3.out"
 
     },
 
-    "-=0.12"
+    "-=0.08"
 
   );
 
@@ -379,7 +464,7 @@ window.addEventListener("load", () => {
 
       y: 0,
 
-      duration: 0.55,
+      duration: 0.48,
 
       ease: "expo.out"
 
@@ -396,7 +481,7 @@ window.addEventListener("load", () => {
 
       scale: 1,
 
-      duration: 0.85,
+      duration: 0.78,
 
       ease: "power3.out"
 
@@ -419,13 +504,13 @@ window.addEventListener("load", () => {
 
       y: 0,
 
-      duration: 0.55,
+      duration: 0.48,
 
       ease: "expo.out"
 
     },
 
-    "-=0.40"
+    "-=0.35"
 
   );
 
@@ -436,7 +521,7 @@ window.addEventListener("load", () => {
 
       scale: 1,
 
-      duration: 0.85,
+      duration: 0.78,
 
       ease: "power3.out"
 
@@ -459,10 +544,10 @@ window.addEventListener("load", () => {
 
     rotation: 0,
 
-    duration: 0.6,
+    duration: 0.5,
 
-    ease: "back.out(1.25)"
+    ease: "back.out(1.2)"
 
-  }, "-=0.32");
+  }, "-=0.28");
 
 });

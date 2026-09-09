@@ -29,25 +29,18 @@
 
 
 /* =========================================
-   WRITING MASK PATH
+   WRITING MASK
 ========================================= */
 
-.sub--title .write-mask-path {
-  fill: none;
-  stroke: #fff;
+.sub-writing-mask-rect {
+  will-change: width;
+}
 
-  /*
-    Large enough to reveal the filled glyphs
-    while the invisible "pen" moves
-  */
-  stroke-width: 10;
 
-  stroke-linecap: round;
-  stroke-linejoin: round;
+/* petit bord doux au niveau de la "plume" */
 
-  vector-effect: non-scaling-stroke;
-
-  will-change: stroke-dashoffset;
+.sub-writing-edge {
+  will-change: transform;
 }
 
 
@@ -62,7 +55,7 @@
 
 .image-wrapper.is--progress1 img,
 .image-wrapper.is--progress2 img {
-  transform: scale(1.08);
+  transform: scale(1.06);
   will-change: transform;
 }
 
