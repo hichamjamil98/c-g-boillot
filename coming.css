@@ -22,14 +22,26 @@
   height: auto;
   overflow: visible;
 
-  /* état initial */
-  clip-path: inset(0 100% 0 0);
+  color: inherit;
 
-  will-change: clip-path;
+  will-change: opacity;
 }
 
-.sub--title > path {
+.sub--title .letter {
+  overflow: visible;
+}
+
+.sub--title .letter path {
   fill: currentColor;
+}
+
+
+/* =========================================
+   GENERATED LETTER CLIPS
+========================================= */
+
+.sub--title .letter-reveal-rect {
+  will-change: width;
 }
 
 
@@ -73,8 +85,4 @@
 .w-editor .stamp {
   visibility: visible !important;
   opacity: 1 !important;
-}
-
-.w-editor .sub--title {
-  clip-path: none !important;
 }

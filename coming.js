@@ -7,9 +7,159 @@ window.addEventListener("load", () => {
      ELEMENTS
   ========================================= */
 
-  const subtitle = document.querySelector(".sub--title");
+  const svg = document.querySelector(".sub--title");
 
-  if (!subtitle) return;
+  if (!svg) return;
+
+  const letters = Array.from(
+    svg.querySelectorAll(".letter")
+  );
+
+  if (!letters.length) return;
+
+
+  const SVG_NS =
+    "http://www.w3.org/2000/svg";
+
+
+  /* =========================================
+     CLEAN OLD GENERATED DEFS
+  ========================================= */
+
+  const oldDefs =
+    svg.querySelector(".letter-animation-defs");
+
+  if (oldDefs) {
+    oldDefs.remove();
+  }
+
+
+  /* =========================================
+     CREATE DEFS
+  ========================================= */
+
+  const defs =
+    document.createElementNS(
+      SVG_NS,
+      "defs"
+    );
+
+  defs.setAttribute(
+    "class",
+    "letter-animation-defs"
+  );
+
+
+  svg.insertBefore(
+    defs,
+    svg.firstChild
+  );
+
+
+  /* =========================================
+     CREATE ONE CLIP FOR EACH LETTER
+  ========================================= */
+
+  const reveals = [];
+
+
+  letters.forEach((letter, index) => {
+
+    const box = letter.getBBox();
+
+    const padding = 3;
+
+
+    /* -------------------------
+       clipPath
+    ------------------------- */
+
+    const clipPath =
+      document.createElementNS(
+        SVG_NS,
+        "clipPath"
+      );
+
+
+    const clipId =
+      `letter-reveal-${index}`;
+
+
+    clipPath.setAttribute(
+      "id",
+      clipId
+    );
+
+
+    clipPath.setAttribute(
+      "clipPathUnits",
+      "userSpaceOnUse"
+    );
+
+
+    /* -------------------------
+       reveal rect
+    ------------------------- */
+
+    const rect =
+      document.createElementNS(
+        SVG_NS,
+        "rect"
+      );
+
+
+    rect.setAttribute(
+      "class",
+      "letter-reveal-rect"
+    );
+
+
+    rect.setAttribute(
+      "x",
+      box.x - padding
+    );
+
+
+    rect.setAttribute(
+      "y",
+      box.y - padding
+    );
+
+
+    rect.setAttribute(
+      "width",
+      "0"
+    );
+
+
+    rect.setAttribute(
+      "height",
+      box.height + padding * 2
+    );
+
+
+    clipPath.appendChild(rect);
+
+    defs.appendChild(clipPath);
+
+
+    /* -------------------------
+       apply clip
+    ------------------------- */
+
+    letter.setAttribute(
+      "clip-path",
+      `url(#${clipId})`
+    );
+
+
+    reveals.push({
+      rect,
+      box,
+      width: box.width + padding * 2
+    });
+
+  });
 
 
   /* =========================================
@@ -33,13 +183,8 @@ window.addEventListener("load", () => {
   });
 
 
-  /*
-    Arrive bientôt :
-    complètement caché à droite
-  */
-
-  gsap.set(subtitle, {
-    clipPath: "inset(0 100% 0 0)"
+  gsap.set(".sub--title", {
+    autoAlpha: 1
   });
 
 
@@ -79,7 +224,7 @@ window.addEventListener("load", () => {
 
 
   /* =========================================
-     TIMELINE
+     MAIN TIMELINE
   ========================================= */
 
   const tl = gsap.timeline({
@@ -92,12 +237,15 @@ window.addEventListener("load", () => {
   ========================================= */
 
   tl.to(".title--tag", {
+
     autoAlpha: 1,
+
     y: 0,
 
     duration: 0.32,
 
     ease: "power3.out"
+
   });
 
 
@@ -106,109 +254,201 @@ window.addEventListener("load", () => {
   ========================================= */
 
   tl.to(".heading--80", {
+
     autoAlpha: 1,
+
     y: 0,
 
-    duration: 0.48,
+    duration: 0.46,
 
     ease: "expo.out"
+
   }, "-=0.12");
 
 
   /* =========================================
      ARRIVE BIENTÔT
-     
-     ÉCRITURE CONTINUE
-     GAUCHE → DROITE
+     LETTER BY LETTER
   ========================================= */
 
-  tl.to(subtitle, {
+  const writingStart =
+    tl.duration() - 0.03;
 
-    clipPath: "inset(0 0% 0 0)",
 
-    duration: 1.55,
+  reveals.forEach((item, index) => {
 
     /*
-      quasi linéaire = mouvement de stylo
+      letters are not all same width,
+      so duration follows their size
     */
-    ease: "power1.inOut"
 
-  }, "-=0.04");
+    const duration =
+      gsap.utils.clamp(
+        0.09,
+        0.26,
+        item.box.width / 95
+      );
+
+
+    /*
+      small overlap between letters:
+      gives continuous pen feeling
+    */
+
+    const overlap =
+      0.045;
+
+
+    const start =
+      index === 0
+        ? writingStart
+        : `>-=${overlap}`;
+
+
+    tl.to(
+      item.rect,
+      {
+
+        attr: {
+          width: item.width
+        },
+
+        duration: duration,
+
+        ease: "none"
+
+      },
+      start
+    );
+
+  });
 
 
   /* =========================================
      PARAGRAPH
   ========================================= */
 
-  tl.to(".progress--bottom .max--718", {
-    autoAlpha: 1,
-    y: 0,
+  tl.to(
+    ".progress--bottom .max--718",
+    {
 
-    duration: 0.42,
+      autoAlpha: 1,
 
-    ease: "power3.out"
-  }, "-=0.08");
+      y: 0,
+
+      duration: 0.4,
+
+      ease: "power3.out"
+
+    },
+
+    "-=0.05"
+
+  );
 
 
   /* =========================================
      IMAGE 1
   ========================================= */
 
-  tl.to(".image-wrapper.is--progress1", {
-    autoAlpha: 1,
-    y: 0,
+  tl.to(
+    ".image-wrapper.is--progress1",
+    {
 
-    duration: 0.5,
+      autoAlpha: 1,
 
-    ease: "expo.out"
-  }, "-=0.05");
+      y: 0,
+
+      duration: 0.48,
+
+      ease: "expo.out"
+
+    },
+
+    "-=0.05"
+
+  );
 
 
-  tl.to(".image-wrapper.is--progress1 img", {
-    scale: 1,
+  tl.to(
+    ".image-wrapper.is--progress1 img",
+    {
 
-    duration: 0.8,
+      scale: 1,
 
-    ease: "power3.out"
-  }, "<");
+      duration: 0.78,
+
+      ease: "power3.out"
+
+    },
+
+    "<"
+
+  );
 
 
   /* =========================================
      IMAGE 2
   ========================================= */
 
-  tl.to(".image-wrapper.is--progress2", {
-    autoAlpha: 1,
-    y: 0,
+  tl.to(
+    ".image-wrapper.is--progress2",
+    {
 
-    duration: 0.5,
+      autoAlpha: 1,
 
-    ease: "expo.out"
-  }, "-=0.36");
+      y: 0,
+
+      duration: 0.48,
+
+      ease: "expo.out"
+
+    },
+
+    "-=0.35"
+
+  );
 
 
-  tl.to(".image-wrapper.is--progress2 img", {
-    scale: 1,
+  tl.to(
+    ".image-wrapper.is--progress2 img",
+    {
 
-    duration: 0.8,
+      scale: 1,
 
-    ease: "power3.out"
-  }, "<");
+      duration: 0.78,
+
+      ease: "power3.out"
+
+    },
+
+    "<"
+
+  );
 
 
   /* =========================================
      STAMP
   ========================================= */
 
-  tl.to(".stamp", {
-    autoAlpha: 1,
+  tl.to(
+    ".stamp",
+    {
 
-    scale: 1,
-    rotation: 0,
+      autoAlpha: 1,
 
-    duration: 0.5,
+      scale: 1,
 
-    ease: "back.out(1.2)"
-  }, "-=0.28");
+      rotation: 0,
+
+      duration: 0.5,
+
+      ease: "back.out(1.2)"
+
+    },
+
+    "-=0.28"
+
+  );
 
 });
