@@ -1,12 +1,12 @@
 /* ==========================================
    HOME — GALERIE : NEXT / PREVIOUS SYNCHRONISÉS
-   Distribution locale : rotation douce autour de la pile
+   Distribution locale avec coin de feuille plié
    ========================================== */
    window.Webflow = window.Webflow || [];
    window.Webflow.push(() => {
      document.querySelectorAll('.is--home-gallery').forEach(section => {
        // A DOM property avoids treating copied data attributes as initialization.
-       if (section.__homeCardsV3) return;
+       if (section.__homeCardsV4) return;
        const previous = section.querySelector('.slide--previous');
        const next = section.querySelector('.slider--next');
        const decks = ['.gallery--group1', '.gallery--group2'].map((selector, i) => {
@@ -19,7 +19,7 @@
          };
        }).filter(deck => deck.cards.length);
        if (!previous || !next || !decks.length) return;
-       section.__homeCardsV3 = true;
+       section.__homeCardsV4 = true;
        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
        const wrap = (index, length) => (index % length + length) % length;
        let busy = false;
@@ -59,7 +59,15 @@
          });
        }
        decks.forEach(deck => {
-         deck.cards.forEach(card => card.classList.add('home-card'));
+         deck.cards.forEach(card => {
+           card.classList.add('home-card');
+           if (!card.querySelector('.home-card-fold')) {
+             const fold = document.createElement('span');
+             fold.className = 'home-card-fold';
+             fold.setAttribute('aria-hidden', 'true');
+             card.appendChild(fold);
+           }
+         });
          render(deck);
        });
    
@@ -96,6 +104,28 @@
                });
                current.style.zIndex = '2';
                incoming.style.zIndex = '3';
+   
+               // Cut the image corner and reveal a shaded paper underside.
+               // Both shapes use the same 14% corner and synchronized keyframes.
+               const image = incoming.querySelector('.image--absolute100');
+               const fold = incoming.querySelector('.home-card-fold');
+               const corner = amount => `polygon(0% 0%, ${100 - amount}% 0%, 100% ${amount}%, 100% 100%, 0% 100%)`;
+               if (image && fold) {
+                 motions.push(animate(image, [
+                   { clipPath: corner(0), offset: 0 },
+                   { clipPath: corner(14), offset: 0.22 },
+                   { clipPath: corner(7), offset: 0.55 },
+                   { clipPath: corner(0), offset: 0.9 },
+                   { clipPath: corner(0), offset: 1 }
+                 ], 680));
+                 motions.push(animate(fold, [
+                   { transform: 'scale(0)', opacity: 0, offset: 0 },
+                   { transform: 'scale(1)', opacity: 1, offset: 0.22 },
+                   { transform: 'scale(.5)', opacity: 1, offset: 0.55 },
+                   { transform: 'scale(0)', opacity: 0, offset: 0.9 },
+                   { transform: 'scale(0)', opacity: 0, offset: 1 }
+                 ], 680));
+               }
    
                // Small fan movement; no departure outside the pile and no layer swap.
                motions.push(animate(current, [
