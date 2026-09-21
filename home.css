@@ -1,5 +1,5 @@
 /* ==========================================
-   HOME — GALERIE : CARTES SUPERPOSÉES / DISTRIBUTION ET COIN PLIÉ
+   HOME — GALERIE : CARTES SUPERPOSÉES / DISTRIBUTION LENTE ET PLI ACCENTUÉ
    Garder largeur et hauteur sur les deux groupes dans Webflow.
    ========================================== */
    .is--home-gallery .gallery--group1,
@@ -56,8 +56,8 @@
      position: absolute;
      top: 0;
      right: 0;
-     width: 14%;
-     height: 14%;
+     width: 26%;
+     height: 26%;
      z-index: 2;
      pointer-events: none;
      transform-origin: 100% 0%;
@@ -65,8 +65,8 @@
      opacity: 0;
      clip-path: polygon(0% 0%, 0% 100%, 100% 100%);
      background: linear-gradient(135deg,
-       #faf8f3 0%, #e9e5dc 36%, #bcb6aa 49%,
-       #f5f2eb 54%, #d8d2c6 100%);
+       #fffdf7 0%, #e9e3d7 32%, #9f9788 48%,
+       #fdfaf2 55%, #c4bbab 100%);
      box-shadow: -3px 4px 7px rgba(0, 0, 0, .24);
    }
    

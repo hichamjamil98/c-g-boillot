@@ -1,12 +1,12 @@
 /* ==========================================
    HOME — GALERIE : NEXT / PREVIOUS SYNCHRONISÉS
-   Distribution locale avec coin de feuille plié
+   Distribution douce et lente avec pli accentué
    ========================================== */
    window.Webflow = window.Webflow || [];
    window.Webflow.push(() => {
      document.querySelectorAll('.is--home-gallery').forEach(section => {
        // A DOM property avoids treating copied data attributes as initialization.
-       if (section.__homeCardsV4) return;
+       if (section.__homeCardsV5) return;
        const previous = section.querySelector('.slide--previous');
        const next = section.querySelector('.slider--next');
        const decks = ['.gallery--group1', '.gallery--group2'].map((selector, i) => {
@@ -19,7 +19,7 @@
          };
        }).filter(deck => deck.cards.length);
        if (!previous || !next || !decks.length) return;
-       section.__homeCardsV4 = true;
+       section.__homeCardsV5 = true;
        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
        const wrap = (index, length) => (index % length + length) % length;
        let busy = false;
@@ -83,7 +83,7 @@
          function animate(card, frames, duration) {
            const animation = card.animate(frames, {
              duration,
-             easing: 'cubic-bezier(.25,.46,.45,.94)',
+             easing: 'cubic-bezier(.37,0,.63,1)',
              fill: 'both'
            });
            animations.push(animation);
@@ -106,25 +106,27 @@
                incoming.style.zIndex = '3';
    
                // Cut the image corner and reveal a shaded paper underside.
-               // Both shapes use the same 14% corner and synchronized keyframes.
+               // Both shapes use the same 26% corner and synchronized keyframes.
                const image = incoming.querySelector('.image--absolute100');
                const fold = incoming.querySelector('.home-card-fold');
                const corner = amount => `polygon(0% 0%, ${100 - amount}% 0%, 100% ${amount}%, 100% 100%, 0% 100%)`;
                if (image && fold) {
                  motions.push(animate(image, [
                    { clipPath: corner(0), offset: 0 },
-                   { clipPath: corner(14), offset: 0.22 },
-                   { clipPath: corner(7), offset: 0.55 },
-                   { clipPath: corner(0), offset: 0.9 },
+                   { clipPath: corner(26), offset: 0.26 },
+                   { clipPath: corner(24), offset: 0.5 },
+                   { clipPath: corner(12), offset: 0.74 },
+                   { clipPath: corner(0), offset: 0.98 },
                    { clipPath: corner(0), offset: 1 }
-                 ], 680));
+                 ], 1450));
                  motions.push(animate(fold, [
                    { transform: 'scale(0)', opacity: 0, offset: 0 },
-                   { transform: 'scale(1)', opacity: 1, offset: 0.22 },
-                   { transform: 'scale(.5)', opacity: 1, offset: 0.55 },
-                   { transform: 'scale(0)', opacity: 0, offset: 0.9 },
+                   { transform: 'scale(1)', opacity: 1, offset: 0.26 },
+                   { transform: 'scale(0.9230769231)', opacity: 1, offset: 0.5 },
+                   { transform: 'scale(0.4615384615)', opacity: 1, offset: 0.74 },
+                   { transform: 'scale(0)', opacity: 0, offset: 0.98 },
                    { transform: 'scale(0)', opacity: 0, offset: 1 }
-                 ], 680));
+                 ], 1450));
                }
    
                // Small fan movement; no departure outside the pile and no layer swap.
@@ -132,13 +134,13 @@
                  { ...flat, offset: 0 },
                  { ...pose(-side, 3, 1, 0, 0, 0, 3, 3), offset: 0.45 },
                  { ...flat, offset: 1 }
-               ], 680));
+               ], 1450));
                motions.push(animate(incoming, [
                  { ...pose(side, 9, -3, 0, 2, -3, 8, 10), opacity: 0, offset: 0 },
-                 { ...pose(side, 7, -2.5, 0, 2, -2, 6, 9), opacity: 1, offset: 0.22 },
+                 { ...pose(side, 7, -2.5, 0, 2, -2, 6, 9), opacity: 1, offset: 0.18 },
                  { ...pose(side, 2, -0.5, 0, 0.5, -0.5, 1.5, 3), opacity: 1, offset: 0.7 },
                  { ...flat, opacity: 1, offset: 1 }
-               ], 680));
+               ], 1450));
              });
              await Promise.all(motions);
            }
