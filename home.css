@@ -82,6 +82,10 @@
        grid-template-columns: minmax(0, var(--wine-second-left, .41fr)) minmax(0, var(--wine-second-right, .59fr));
      }
      .grid--2cl.is--home.home-wine-hover > .image-wrapper {
+       /* Keep the original individual height; animate columns only. */
+       height: var(--wine-item-height);
+       min-height: var(--wine-item-height);
+       max-height: var(--wine-item-height);
        min-width: 0;
        width: 100%;
        max-width: none;

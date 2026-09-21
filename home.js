@@ -239,6 +239,11 @@
          hovered = focused = -1;
          grid.classList.remove('home-wine-hover', 'is-wine-first', 'is-wine-second');
          if (desktop.matches) {
+           // Capture each original Webflow height before changing column widths.
+           // This also preserves different heights and percentage/aspect-ratio sizing.
+           items.forEach(item => {
+             item.style.setProperty('--wine-item-height', `${getComputedStyle(item).height}`);
+           });
            // Preserve the original column proportions before enabling the hover.
            const first = items[0].getBoundingClientRect().width;
            const second = items[1].getBoundingClientRect().width;
@@ -267,6 +272,11 @@
          });
        });
        desktop.addEventListener('change', setup);
+       let resizeTimer;
+       window.addEventListener('resize', () => {
+         clearTimeout(resizeTimer);
+         resizeTimer = setTimeout(setup, 150);
+       }, { passive: true });
        setup();
      });
    });
