@@ -1,11 +1,11 @@
 /* ==========================================
-   HOME — GALERIE : DISTRIBUTION DE CARTES FLUIDE
+   HOME — GALERIE : DISTRIBUTION DE CARTES — INCLINAISONS ALÉATOIRES
    Next et Previous : même animation, deux collections synchronisées.
    ========================================== */
    window.Webflow = window.Webflow || [];
    window.Webflow.push(() => {
      document.querySelectorAll('.is--home-gallery').forEach(section => {
-       if (section.__homeDeal) return;
+       if (section.__homeDealRandom) return;
        const previous = section.querySelector('.slide--previous');
        const next = section.querySelector('.slider--next');
        const decks = ['.gallery--group1', '.gallery--group2'].map(selector => {
@@ -13,8 +13,10 @@
          return { list, index: 0, cards: list ? [...list.children].filter(el => el.matches('.w-dyn-item')) : [] };
        }).filter(deck => deck.cards.length);
        if (!decks.length || !previous || !next) return;
-       section.__homeDeal = true;
-       const DURATION = 550;
+       section.__homeDealRandom = true;
+       const DURATION = 720;
+       const MAX_TILT = 3.5; // Inclinaison finale maximale, en degrés.
+       const random = (min, max) => min + Math.random() * (max - min);
        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
        const wrap = (n, length) => (n % length + length) % length;
        let busy = false;
@@ -27,7 +29,8 @@
          deck.cards.forEach((card, i) => {
            const active = i === deck.index;
            Object.assign(card.style, {
-             transform: 'none', boxShadow: 'none', opacity: '1',
+             transform: `translate3d(0, 0, 0) rotate(${card.__dealAngle || 0}deg)`,
+             transformOrigin: '50% 50%', boxShadow: 'none', opacity: '1',
              visibility: active ? 'visible' : 'hidden', zIndex: active ? '2' : '0',
              pointerEvents: active ? 'auto' : 'none', willChange: 'auto'
            });
@@ -52,11 +55,19 @@
          busy = true;
          controls();
          const changes = decks.filter(deck => deck.cards.length > 1)
-           .map(deck => ({ deck, target: wrap(deck.index + direction, deck.cards.length) }));
+           .map(deck => {
+             const currentAngle = deck.cards[deck.index].__dealAngle || 0;
+             let angle = random(-MAX_TILT, MAX_TILT);
+             // Make each new inclination perceptible without accumulating rotation.
+             if (Math.abs(angle - currentAngle) < 1.2) {
+               angle = currentAngle >= 0 ? random(-MAX_TILT, -1.2) : random(1.2, MAX_TILT);
+             }
+             return { deck, target: wrap(deck.index + direction, deck.cards.length), angle };
+           });
          const animations = [];
          try {
            const images = changes.map(({ deck, target }) => deck.cards[target].querySelector('img'));
-           // Avoid unfolding an empty image on a slow connection; timeout keeps controls usable.
+           // Avoid dealing an empty image on a slow connection; timeout keeps controls usable.
            await Promise.all(images.filter(Boolean).map(image => {
              image.loading = 'eager';
              if (!image.decode) return Promise.resolve();
@@ -66,28 +77,33 @@
              });
            }));
            if (!reduced.matches) {
-             changes.forEach(({ deck, target }, index) => {
+             changes.forEach(({ deck, target, angle }) => {
                const incoming = deck.cards[target];
-               const side = index % 2 === 0 ? -1 : 1;
+               const side = Math.random() < .5 ? -1 : 1;
+               const x = side * random(2, 5);
+               const y = -random(11, 16);
+               const startAngle = angle + side * random(4, 7);
                incoming.style.visibility = 'visible';
                incoming.style.zIndex = '3';
                incoming.style.pointerEvents = 'none';
-               incoming.style.transformOrigin = '50% 85%';
+               incoming.style.transformOrigin = '50% 50%';
                incoming.style.willChange = 'transform, opacity';
-               const transform = (x, y, angle) =>
-                 `translate3d(${side * x}%, ${y}%, 0) rotate(${side * angle}deg)`;
-               // One intact card, dealt from just above the pile in both directions.
+               const transform = (x, y, rotation) =>
+                 `translate3d(${x}%, ${y}%, 0) rotate(${rotation}deg)`;
+               // Same top-down deal for Next and Previous, with a fresh bounded angle.
+               // A continuous ease-out avoids pauses between intermediate poses.
                animations.push(incoming.animate([
-                 { transform: transform(3, -13, 5), opacity: 0,
-                   boxShadow: '0 14px 24px rgba(0,0,0,.16)', offset: 0 },
-                 { transform: transform(2.4, -10, 4), opacity: 1,
-                   boxShadow: '0 11px 20px rgba(0,0,0,.13)', offset: 0.16 },
-                 { transform: transform(0, 0, 0), opacity: 1,
-                   boxShadow: '0 0px 0px rgba(0,0,0,0)', offset: 1 }
+                 { transform: transform(x, y, startAngle),
+                   boxShadow: '0 14px 25px rgba(0,0,0,.16)' },
+                 { transform: transform(0, 0, angle),
+                   boxShadow: '0 0px 0px rgba(0,0,0,0)' }
                ], {
                  duration: DURATION,
-                 easing: 'cubic-bezier(.22,.61,.36,1)',
+                 easing: 'cubic-bezier(.18,.72,.24,1)',
                  fill: 'both'
+               }));
+               animations.push(incoming.animate([{ opacity: 0 }, { opacity: 1 }], {
+                 duration: 110, easing: 'ease-out', fill: 'both'
                }));
              });
              await Promise.all(animations.map(animation => animation.finished));
@@ -95,7 +111,10 @@
          } catch (error) {
            console.warn('Home gallery:', error);
          } finally {
-           changes.forEach(({ deck, target }) => { deck.index = target; });
+           changes.forEach(({ deck, target, angle }) => {
+             deck.cards[target].__dealAngle = angle;
+             deck.index = target;
+           });
            decks.forEach(render);
            animations.forEach(animation => animation.cancel());
            busy = false;
