@@ -141,13 +141,13 @@
    /* ==========================================
       HOME — CURSOR : SUIVI FLUIDE AU SURVOL
       Reprise du comportement du curseur projet fourni, sans dépendance GSAP.
-      Cibles : galerie, .project--image-wrapper ou [data-cursor].
+      Cibles : les deux images de Nos vins dans .grid--2cl.is--home.
       ========================================== */
    window.Webflow.push(() => {
      const cursor = document.querySelector('.cursor');
      if (!cursor || cursor.__homeCursorReady) return;
      cursor.__homeCursorReady = true;
-     const targets = '.project--image-wrapper, .gallery--group1, .gallery--group2, [data-cursor]';
+     const targets = '.grid--2cl.is--home > .image-wrapper';
      const desktop = window.matchMedia('(min-width: 992px) and (hover: hover) and (pointer: fine)');
      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
      cursor.classList.add('home-cursor');
