@@ -213,3 +213,61 @@
      window.addEventListener('resize', refresh, { passive: true });
    });
    
+   /* ==========================================
+      HOME — NOS VINS : AGRANDISSEMENT AU SURVOL
+      L'image survolée s'élargit, sa voisine se resserre.
+      ========================================== */
+   window.Webflow.push(() => {
+     const desktop = window.matchMedia('(min-width: 992px) and (hover: hover) and (pointer: fine)');
+     document.querySelectorAll('.grid--2cl.is--home').forEach(grid => {
+       if (grid.__wineHoverReady) return;
+       const items = [...grid.children].filter(item => item.matches('.image-wrapper'));
+       if (items.length !== 2) return;
+       grid.__wineHoverReady = true;
+       let hovered = -1;
+       let focused = -1;
+       function update() {
+         const index = desktop.matches ? (hovered >= 0 ? hovered : focused) : -1;
+         grid.classList.toggle('is-wine-first', index === 0);
+         grid.classList.toggle('is-wine-second', index === 1);
+         items.forEach((item, i) => {
+           item.classList.toggle('is--hovered', index === i);
+           item.classList.toggle('is--neighbor-squeeze', index >= 0 && index !== i);
+         });
+       }
+       function setup() {
+         hovered = focused = -1;
+         grid.classList.remove('home-wine-hover', 'is-wine-first', 'is-wine-second');
+         if (desktop.matches) {
+           // Preserve the original column proportions before enabling the hover.
+           const first = items[0].getBoundingClientRect().width;
+           const second = items[1].getBoundingClientRect().width;
+           const ratio = first + second ? first / (first + second) : .5;
+           const firstHover = Math.min(.8, ratio + .09);
+           const secondHover = Math.max(.2, ratio - .09);
+           const pairs = { base: ratio, first: firstHover, second: secondHover };
+           Object.entries(pairs).forEach(([name, value]) => {
+             grid.style.setProperty(`--wine-${name}-left`, `${value}fr`);
+             grid.style.setProperty(`--wine-${name}-right`, `${1 - value}fr`);
+           });
+           grid.classList.add('home-wine-hover');
+         }
+         update();
+       }
+       items.forEach((item, index) => {
+         item.addEventListener('pointerenter', event => {
+           if (event.pointerType === 'touch' || !desktop.matches) return;
+           hovered = index;
+           update();
+         });
+         item.addEventListener('pointerleave', () => { hovered = -1; update(); });
+         item.addEventListener('focusin', () => { focused = index; update(); });
+         item.addEventListener('focusout', event => {
+           if (!item.contains(event.relatedTarget)) { focused = -1; update(); }
+         });
+       });
+       desktop.addEventListener('change', setup);
+       setup();
+     });
+   });
+   

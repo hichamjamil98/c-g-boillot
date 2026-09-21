@@ -66,3 +66,29 @@
      .cursor.home-cursor { transition: none; }
    }
    
+   /* ==========================================
+      HOME — NOS VINS : AGRANDISSEMENT AU SURVOL
+      ========================================== */
+   @media (min-width: 992px) and (hover: hover) and (pointer: fine) {
+     .grid--2cl.is--home.home-wine-hover {
+       display: grid;
+       grid-template-columns: minmax(0, var(--wine-base-left, .5fr)) minmax(0, var(--wine-base-right, .5fr));
+       transition: grid-template-columns .6s cubic-bezier(.22, 1, .36, 1);
+     }
+     .grid--2cl.is--home.home-wine-hover.is-wine-first {
+       grid-template-columns: minmax(0, var(--wine-first-left, .59fr)) minmax(0, var(--wine-first-right, .41fr));
+     }
+     .grid--2cl.is--home.home-wine-hover.is-wine-second {
+       grid-template-columns: minmax(0, var(--wine-second-left, .41fr)) minmax(0, var(--wine-second-right, .59fr));
+     }
+     .grid--2cl.is--home.home-wine-hover > .image-wrapper {
+       min-width: 0;
+       width: 100%;
+       max-width: none;
+       overflow: hidden;
+     }
+   }
+   @media (prefers-reduced-motion: reduce) {
+     .grid--2cl.is--home.home-wine-hover { transition: none; }
+   }
+   
