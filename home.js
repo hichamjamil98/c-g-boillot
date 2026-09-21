@@ -1,12 +1,12 @@
 /* ==========================================
    HOME — GALERIE : NEXT / PREVIOUS SYNCHRONISÉS
-   Cartes superposées, soulèvement et mélange 3D
+   Distribution locale : rotation douce autour de la pile
    ========================================== */
    window.Webflow = window.Webflow || [];
    window.Webflow.push(() => {
      document.querySelectorAll('.is--home-gallery').forEach(section => {
        // A DOM property avoids treating copied data attributes as initialization.
-       if (section.__homeCardsV2) return;
+       if (section.__homeCardsV3) return;
        const previous = section.querySelector('.slide--previous');
        const next = section.querySelector('.slider--next');
        const decks = ['.gallery--group1', '.gallery--group2'].map((selector, i) => {
@@ -19,7 +19,7 @@
          };
        }).filter(deck => deck.cards.length);
        if (!previous || !next || !decks.length) return;
-       section.__homeCardsV2 = true;
+       section.__homeCardsV3 = true;
        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
        const wrap = (index, length) => (index % length + length) % length;
        let busy = false;
@@ -46,7 +46,7 @@
              visibility: active ? 'visible' : 'hidden',
              zIndex: active ? '2' : '0',
              pointerEvents: active ? 'auto' : 'none',
-             transformOrigin: '50% 75%',
+             transformOrigin: '50% 85%',
              willChange: 'auto'
            });
            card.inert = !active;
@@ -75,7 +75,7 @@
          function animate(card, frames, duration) {
            const animation = card.animate(frames, {
              duration,
-             easing: 'cubic-bezier(.4,0,.2,1)',
+             easing: 'cubic-bezier(.25,.46,.45,.94)',
              fill: 'both'
            });
            animations.push(animation);
@@ -83,41 +83,34 @@
          }
          try {
            if (!reducedMotion.matches) {
-             changes.forEach(change => {
-               const { deck, target } = change;
+             const motions = [];
+             changes.forEach(({ deck, target }) => {
                const current = deck.cards[deck.index];
                const incoming = deck.cards[target];
-               change.moving = direction === 1 ? current : incoming;
-               change.still = direction === 1 ? incoming : current;
-               change.side = deck.side * direction;
+               const side = deck.side * direction;
                [current, incoming].forEach(card => {
                  card.style.visibility = 'visible';
                  card.style.pointerEvents = 'none';
+                 card.style.willChange = 'transform, opacity';
+                 card.style.transformOrigin = '50% 85%';
                });
-               change.moving.style.zIndex = direction === 1 ? '3' : '1';
-               change.still.style.zIndex = '2';
-               change.moving.style.willChange = 'transform, box-shadow';
-               change.moving.style.transformOrigin = `${change.side < 0 ? 85 : 15}% 80%`;
-               change.lift = pose(change.side, 9, -5, 65, 11, -19, 7, 20);
-               change.out = pose(change.side, 125, -14, 100, 8, -24, 19, 32);
-             });
-             // Both collections lift and slide at precisely the same time.
-             await Promise.all(changes.map(change => animate(change.moving, [
-               { ...flat, offset: 0 },
-               { ...change.lift, offset: 0.32 },
-               { ...change.out, offset: 1 }
-             ], 480)));
+               current.style.zIndex = '2';
+               incoming.style.zIndex = '3';
    
-             // Switch layer order only once the moving card clears the pile.
-             changes.forEach(change => {
-               change.moving.style.zIndex = direction === 1 ? '1' : '3';
+               // Small fan movement; no departure outside the pile and no layer swap.
+               motions.push(animate(current, [
+                 { ...flat, offset: 0 },
+                 { ...pose(-side, 3, 1, 0, 0, 0, 3, 3), offset: 0.45 },
+                 { ...flat, offset: 1 }
+               ], 680));
+               motions.push(animate(incoming, [
+                 { ...pose(side, 9, -3, 0, 2, -3, 8, 10), opacity: 0, offset: 0 },
+                 { ...pose(side, 7, -2.5, 0, 2, -2, 6, 9), opacity: 1, offset: 0.22 },
+                 { ...pose(side, 2, -0.5, 0, 0.5, -0.5, 1.5, 3), opacity: 1, offset: 0.7 },
+                 { ...flat, opacity: 1, offset: 1 }
+               ], 680));
              });
-             await Promise.all(changes.map(change => animate(change.moving, [
-               { ...change.out, offset: 0 },
-               { ...pose(change.side, 35, -5, 55, -5, 13, 8, 18), offset: 0.52 },
-               { ...pose(change.side, 0, 0, 8, -3, 3, -1, 4), offset: 0.87 },
-               { ...flat, offset: 1 }
-             ], 570)));
+             await Promise.all(motions);
            }
          } catch (error) {
            // Commit a stable frame even if an animation is interrupted.

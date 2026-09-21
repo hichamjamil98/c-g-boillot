@@ -1,5 +1,5 @@
 /* ==========================================
-   HOME — GALERIE : CARTES SUPERPOSÉES / MOUVEMENT 3D
+   HOME — GALERIE : CARTES SUPERPOSÉES / DISTRIBUTION LOCALE
    Garder largeur et hauteur sur les deux groupes dans Webflow.
    ========================================== */
    .is--home-gallery .gallery--group1,
@@ -30,7 +30,7 @@
      width: 100%;
      height: 100%;
      margin: 0;
-     transform-origin: 50% 75%;
+     transform-origin: 50% 85%;
      backface-visibility: hidden;
      transition: none;
    }
