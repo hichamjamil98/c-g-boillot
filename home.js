@@ -1,39 +1,27 @@
 /* ==========================================
-   HOME — GALERIE : NEXT / PREVIOUS SYNCHRONISÉS
-   Distribution douce et lente avec pli accentué
+   HOME — GALERIE : DÉPLIAGE DU HAUT VERS LE BAS
+   Next et Previous : même animation, deux collections synchronisées.
    ========================================== */
    window.Webflow = window.Webflow || [];
    window.Webflow.push(() => {
      document.querySelectorAll('.is--home-gallery').forEach(section => {
-       // A DOM property avoids treating copied data attributes as initialization.
-       if (section.__homeCardsV5) return;
+       if (section.__homeUnfold) return;
        const previous = section.querySelector('.slide--previous');
        const next = section.querySelector('.slider--next');
-       const decks = ['.gallery--group1', '.gallery--group2'].map((selector, i) => {
-         const group = section.querySelector(selector);
-         const list = group?.querySelector('.w-dyn-items');
-         return {
-           side: i === 0 ? -1 : 1,
-           index: 0,
-           cards: list ? [...list.children].filter(el => el.matches('.w-dyn-item')) : []
-         };
+       const decks = ['.gallery--group1', '.gallery--group2'].map(selector => {
+         const list = section.querySelector(selector)?.querySelector('.w-dyn-items');
+         return { list, index: 0, cards: list ? [...list.children].filter(el => el.matches('.w-dyn-item')) : [] };
        }).filter(deck => deck.cards.length);
-       if (!previous || !next || !decks.length) return;
-       section.__homeCardsV5 = true;
-       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-       const wrap = (index, length) => (index % length + length) % length;
+       if (!decks.length || !previous || !next) return;
+       section.__homeUnfold = true;
+       const DURATION = 1700;
+       const FOLDS = 5;
+       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+       const wrap = (n, length) => (n % length + length) % length;
+       const clamp = n => Math.max(0, Math.min(1, n));
+       const ease = t => t * t * (3 - 2 * t);
        let busy = false;
    
-       const flat = {
-         transform: 'perspective(1100px) translate3d(0px, 0px, 0px) rotateX(0deg) rotateY(0deg) rotateZ(0deg)',
-         boxShadow: '0px 0px 0px rgba(0,0,0,0)'
-       };
-       function pose(side, x, y, z, rx, ry, rz, shadow) {
-         return {
-           transform: `perspective(1100px) translate3d(${side * x}%, ${y}%, ${z}px) rotateX(${rx}deg) rotateY(${side * ry}deg) rotateZ(${side * rz}deg)`,
-           boxShadow: `0px ${shadow}px ${shadow * 1.8}px rgba(0,0,0,${shadow ? 0.25 : 0})`
-         };
-       }
        function controls() {
          const disabled = busy || decks.every(deck => deck.cards.length < 2);
          [previous, next].forEach(button => button.setAttribute('aria-disabled', String(disabled)));
@@ -41,135 +29,130 @@
        function render(deck) {
          deck.cards.forEach((card, i) => {
            const active = i === deck.index;
-           Object.assign(card.style, flat, {
-             opacity: '1',
-             visibility: active ? 'visible' : 'hidden',
-             zIndex: active ? '2' : '0',
-             pointerEvents: active ? 'auto' : 'none',
-             transformOrigin: '50% 85%',
-             willChange: 'auto'
+           Object.assign(card.style, {
+             transform: 'none', boxShadow: 'none', opacity: '1',
+             visibility: active ? 'visible' : 'hidden', zIndex: active ? '2' : '0',
+             pointerEvents: active ? 'auto' : 'none', willChange: 'auto'
            });
            card.inert = !active;
            card.setAttribute('aria-hidden', String(!active));
          });
-         // Preload both possible next images without loading the whole collection.
          [0, 1, -1].forEach(offset => {
-           deck.cards[wrap(deck.index + offset, deck.cards.length)]
-             .querySelectorAll('img').forEach(image => { image.loading = 'eager'; });
+           deck.cards[wrap(deck.index + offset, deck.cards.length)].querySelectorAll('img')
+             .forEach(img => { img.loading = 'eager'; });
          });
        }
        decks.forEach(deck => {
          deck.cards.forEach(card => {
            card.classList.add('home-card');
-           if (!card.querySelector('.home-card-fold')) {
-             const fold = document.createElement('span');
-             fold.className = 'home-card-fold';
-             fold.setAttribute('aria-hidden', 'true');
-             card.appendChild(fold);
-           }
+           card.querySelectorAll('.home-card-fold').forEach(fold => fold.remove());
          });
          render(deck);
        });
    
+       // Five connected image bands form a sheet folded like an accordion.
+       // Their hinge positions follow the actual projected length of each band.
+       function makeSheet(deck, image) {
+         const sheet = document.createElement('div');
+         sheet.className = 'home-unfold-sheet';
+         sheet.setAttribute('aria-hidden', 'true');
+         const computed = getComputedStyle(image);
+         const bands = Array.from({ length: FOLDS }, (_, i) => {
+           const band = document.createElement('div');
+           band.className = 'home-unfold-band';
+           const copy = document.createElement('img');
+           copy.src = image.currentSrc || image.src;
+           copy.alt = '';
+           copy.draggable = false;
+           copy.style.objectFit = computed.objectFit;
+           copy.style.objectPosition = computed.objectPosition;
+           const shade = document.createElement('span');
+           shade.className = 'home-unfold-shade';
+           shade.style.background = i % 2
+             ? 'linear-gradient(to bottom, rgba(0,0,0,.42), rgba(0,0,0,.08))'
+             : 'linear-gradient(to bottom, rgba(255,255,255,.32), rgba(0,0,0,.22))';
+           band.append(copy, shade);
+           sheet.appendChild(band);
+           return { band, copy, shade };
+         });
+         deck.list.appendChild(sheet);
+         return { sheet, bands };
+       }
+       function draw({ sheet, bands }, progress) {
+         const width = sheet.clientWidth;
+         const height = sheet.clientHeight;
+         const strip = height / FOLDS;
+         let y = -Math.min(18, height * .05) * (1 - ease(clamp(progress / .5)));
+         let z = 0;
+         sheet.style.opacity = String(ease(clamp(progress / .1)));
+         bands.forEach(({ band, copy, shade }, i) => {
+           const opening = ease(clamp((progress - i * .065) / .72));
+           const angle = (1 - opening) * 78 * (i % 2 ? -1 : 1);
+           const radians = angle * Math.PI / 180;
+           band.style.height = `${strip + .3}px`;
+           band.style.transform = `translate3d(0, ${y}px, ${z}px) rotateX(${angle}deg)`;
+           copy.style.width = `${width}px`;
+           copy.style.height = `${height}px`;
+           copy.style.top = `${-i * strip}px`;
+           shade.style.opacity = String(1 - opening);
+           y += Math.cos(radians) * strip;
+           z += Math.sin(radians) * strip;
+         });
+       }
        async function move(direction) {
          if (busy || decks.every(deck => deck.cards.length < 2)) return;
          busy = true;
          controls();
-         const animations = [];
-         const changes = decks.filter(deck => deck.cards.length > 1).map(deck => ({
-           deck,
-           target: wrap(deck.index + direction, deck.cards.length)
-         }));
-         function animate(card, frames, duration) {
-           const animation = card.animate(frames, {
-             duration,
-             easing: 'cubic-bezier(.37,0,.63,1)',
-             fill: 'both'
-           });
-           animations.push(animation);
-           return animation.finished;
-         }
+         const changes = decks.filter(deck => deck.cards.length > 1)
+           .map(deck => ({ deck, target: wrap(deck.index + direction, deck.cards.length) }));
+         const sheets = [];
          try {
-           if (!reducedMotion.matches) {
-             const motions = [];
-             changes.forEach(({ deck, target }) => {
-               const current = deck.cards[deck.index];
-               const incoming = deck.cards[target];
-               const side = deck.side * direction;
-               [current, incoming].forEach(card => {
-                 card.style.visibility = 'visible';
-                 card.style.pointerEvents = 'none';
-                 card.style.willChange = 'transform, opacity';
-                 card.style.transformOrigin = '50% 85%';
-               });
-               current.style.zIndex = '2';
-               incoming.style.zIndex = '3';
-   
-               // Cut the image corner and reveal a shaded paper underside.
-               // Both shapes use the same 26% corner and synchronized keyframes.
-               const image = incoming.querySelector('.image--absolute100');
-               const fold = incoming.querySelector('.home-card-fold');
-               const corner = amount => `polygon(0% 0%, ${100 - amount}% 0%, 100% ${amount}%, 100% 100%, 0% 100%)`;
-               if (image && fold) {
-                 motions.push(animate(image, [
-                   { clipPath: corner(0), offset: 0 },
-                   { clipPath: corner(26), offset: 0.26 },
-                   { clipPath: corner(24), offset: 0.5 },
-                   { clipPath: corner(12), offset: 0.74 },
-                   { clipPath: corner(0), offset: 0.98 },
-                   { clipPath: corner(0), offset: 1 }
-                 ], 1450));
-                 motions.push(animate(fold, [
-                   { transform: 'scale(0)', opacity: 0, offset: 0 },
-                   { transform: 'scale(1)', opacity: 1, offset: 0.26 },
-                   { transform: 'scale(0.9230769231)', opacity: 1, offset: 0.5 },
-                   { transform: 'scale(0.4615384615)', opacity: 1, offset: 0.74 },
-                   { transform: 'scale(0)', opacity: 0, offset: 0.98 },
-                   { transform: 'scale(0)', opacity: 0, offset: 1 }
-                 ], 1450));
-               }
-   
-               // Small fan movement; no departure outside the pile and no layer swap.
-               motions.push(animate(current, [
-                 { ...flat, offset: 0 },
-                 { ...pose(-side, 3, 1, 0, 0, 0, 3, 3), offset: 0.45 },
-                 { ...flat, offset: 1 }
-               ], 1450));
-               motions.push(animate(incoming, [
-                 { ...pose(side, 9, -3, 0, 2, -3, 8, 10), opacity: 0, offset: 0 },
-                 { ...pose(side, 7, -2.5, 0, 2, -2, 6, 9), opacity: 1, offset: 0.18 },
-                 { ...pose(side, 2, -0.5, 0, 0.5, -0.5, 1.5, 3), opacity: 1, offset: 0.7 },
-                 { ...flat, opacity: 1, offset: 1 }
-               ], 1450));
+           const images = changes.map(({ deck, target }) => deck.cards[target].querySelector('img'));
+           // Avoid unfolding an empty image on a slow connection; timeout keeps controls usable.
+           await Promise.all(images.filter(Boolean).map(image => {
+             image.loading = 'eager';
+             if (!image.decode) return Promise.resolve();
+             return new Promise(resolve => {
+               const timeout = setTimeout(resolve, 2500);
+               image.decode().catch(() => {}).finally(() => { clearTimeout(timeout); resolve(); });
              });
-             await Promise.all(motions);
+           }));
+           if (!reduced.matches) {
+             changes.forEach(({ deck }, i) => {
+               if (images[i] && deck.list.clientWidth && deck.list.clientHeight) {
+                 const sheet = makeSheet(deck, images[i]);
+                 draw(sheet, 0);
+                 sheets.push(sheet);
+               }
+             });
+             if (sheets.length) await new Promise(resolve => {
+               let start;
+               function frame(now) {
+                 start ??= now;
+                 const progress = clamp((now - start) / DURATION);
+                 sheets.forEach(sheet => draw(sheet, progress));
+                 if (progress < 1 && !reduced.matches) requestAnimationFrame(frame);
+                 else resolve();
+               }
+               requestAnimationFrame(frame);
+             });
            }
          } catch (error) {
-           // Commit a stable frame even if an animation is interrupted.
-           if (error.name !== 'AbortError') console.warn('Home gallery:', error);
+           console.warn('Home gallery:', error);
          } finally {
            changes.forEach(({ deck, target }) => { deck.index = target; });
-           animations.forEach(animation => animation.cancel());
            decks.forEach(render);
+           sheets.forEach(({ sheet }) => sheet.remove());
            busy = false;
            controls();
          }
        }
-       [
-         [previous, -1, 'Image précédente'],
-         [next, 1, 'Image suivante']
-       ].forEach(([button, direction, label]) => {
+       [[previous, -1, 'Image précédente'], [next, 1, 'Image suivante']].forEach(([button, direction, label]) => {
          button.setAttribute('role', 'button');
          button.setAttribute('aria-label', label);
-         button.addEventListener('click', event => {
-           event.preventDefault();
-           move(direction);
-         });
+         button.addEventListener('click', event => { event.preventDefault(); move(direction); });
          button.addEventListener('keydown', event => {
-           if (event.key === ' ' && button.tagName !== 'BUTTON') {
-             event.preventDefault();
-             move(direction);
-           }
+           if (event.key === ' ' && button.tagName !== 'BUTTON') { event.preventDefault(); move(direction); }
          });
        });
        controls();
