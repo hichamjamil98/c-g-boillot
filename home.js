@@ -1,11 +1,11 @@
 /* ==========================================
-   HOME — GALERIE : DISTRIBUTION DE CARTES — INCLINAISONS ALÉATOIRES
+   HOME — GALERIE : DISTRIBUTION DE CARTES — PILE ET INCLINAISONS CONSERVÉES
    Next et Previous : même animation, deux collections synchronisées.
    ========================================== */
    window.Webflow = window.Webflow || [];
    window.Webflow.push(() => {
      document.querySelectorAll('.is--home-gallery').forEach(section => {
-       if (section.__homeDealRandom) return;
+       if (section.__homeDealStack) return;
        const previous = section.querySelector('.slide--previous');
        const next = section.querySelector('.slider--next');
        const decks = ['.gallery--group1', '.gallery--group2'].map(selector => {
@@ -13,7 +13,7 @@
          return { list, index: 0, cards: list ? [...list.children].filter(el => el.matches('.w-dyn-item')) : [] };
        }).filter(deck => deck.cards.length);
        if (!decks.length || !previous || !next) return;
-       section.__homeDealRandom = true;
+       section.__homeDealStack = true;
        const DURATION = 720;
        const MAX_TILT = 3.5; // Inclinaison finale maximale, en degrés.
        const random = (min, max) => min + Math.random() * (max - min);
@@ -31,7 +31,7 @@
            Object.assign(card.style, {
              transform: `translate3d(0, 0, 0) rotate(${card.__dealAngle || 0}deg)`,
              transformOrigin: '50% 50%', boxShadow: 'none', opacity: '1',
-             visibility: active ? 'visible' : 'hidden', zIndex: active ? '2' : '0',
+             visibility: 'visible', zIndex: String(deck.order.indexOf(card) + 1),
              pointerEvents: active ? 'auto' : 'none', willChange: 'auto'
            });
            card.inert = !active;
@@ -43,6 +43,8 @@
          });
        }
        decks.forEach(deck => {
+         // Bottom to top: keep every dealt card and its saved angle in the pile.
+         deck.order = [...deck.cards].reverse();
          deck.cards.forEach(card => {
            card.classList.add('home-card');
            card.querySelectorAll('.home-card-fold').forEach(fold => fold.remove());
@@ -84,7 +86,7 @@
                const y = -random(11, 16);
                const startAngle = angle + side * random(4, 7);
                incoming.style.visibility = 'visible';
-               incoming.style.zIndex = '3';
+               incoming.style.zIndex = String(deck.cards.length + 1);
                incoming.style.pointerEvents = 'none';
                incoming.style.transformOrigin = '50% 50%';
                incoming.style.willChange = 'transform, opacity';
@@ -112,7 +114,10 @@
            console.warn('Home gallery:', error);
          } finally {
            changes.forEach(({ deck, target, angle }) => {
-             deck.cards[target].__dealAngle = angle;
+             const card = deck.cards[target];
+             card.__dealAngle = angle;
+             deck.order = deck.order.filter(item => item !== card);
+             deck.order.push(card);
              deck.index = target;
            });
            decks.forEach(render);
