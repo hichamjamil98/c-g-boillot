@@ -14,7 +14,7 @@
        }).filter(deck => deck.cards.length);
        if (!decks.length || !previous || !next) return;
        section.__homeDealStack = true;
-       const DURATION = 720;
+       const DURATION = 1100;
        const MAX_TILT = 3.5; // Inclinaison finale maximale, en degrés.
        const random = (min, max) => min + Math.random() * (max - min);
        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -101,11 +101,11 @@
                    boxShadow: '0 0px 0px rgba(0,0,0,0)' }
                ], {
                  duration: DURATION,
-                 easing: 'cubic-bezier(.18,.72,.24,1)',
+                 easing: 'cubic-bezier(.25,.46,.35,1)',
                  fill: 'both'
                }));
                animations.push(incoming.animate([{ opacity: 0 }, { opacity: 1 }], {
-                 duration: 110, easing: 'ease-out', fill: 'both'
+                 duration: 180, easing: 'ease-out', fill: 'both'
                }));
              });
              await Promise.all(animations.map(animation => animation.finished));
