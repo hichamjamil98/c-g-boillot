@@ -1,0 +1,124 @@
+/* Styles d'animation uniquement. Conserver le CSS Webflow du site.
+   Aucun élément n'est caché avant l'exécution de JavaScript. */
+/* ------------------- Directional List Hover navbar ------------------- */
+
+[data-directional-hover-tile] {
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(-100%);
+    will-change: transform;
+  }
+  
+  /* ------------------- Loading Animation ------------------- */
+  
+  /* load-split: mask + line structure (SplitText) */
+  [data-animation="load-split"] .load-split__line-mask,
+  [animation="load-split"] .load-split__line-mask,
+  [load-split] .load-split__line-mask {
+    overflow: hidden;
+    display: block;
+  }
+  
+  [data-animation="load-split"] .load-split__line,
+  [animation="load-split"] .load-split__line,
+  [load-split] .load-split__line {
+    display: block;
+  }
+  
+  /* fade-split: mask + line structure (SplitText) */
+  [data-animation="fade-split"] .fade-split__line-mask,
+  [animation="fade-split"] .fade-split__line-mask,
+  [fade-split] .fade-split__line-mask {
+    overflow: hidden;
+    display: block;
+  }
+  
+  [data-animation="fade-split"] .fade-split__line,
+  [animation="fade-split"] .fade-split__line,
+  [fade-split] .fade-split__line {
+    display: block;
+  }
+  
+  /* fade-scrub: word structure (SplitText) */
+  [data-animation="fade-scrub"] .fade-scrub__word,
+  [animation="fade-scrub"] .fade-scrub__word,
+  [fade-scrub] .fade-scrub__word {
+    display: inline-block;
+  }
+  
+  /* ------------------------- Underline Link [https://osmo.supply/] -------------------------  */
+  
+  [data-underline-link] {
+    text-decoration: none;
+    position: relative;
+  }
+  
+  [data-underline-link]::before {
+    content: "";
+    position: absolute;
+    bottom: -0.0625em;
+    left: 0;
+    width: 100%;
+    height: 0.1em;
+    background-color: currentColor;
+    transition: transform 0.735s cubic-bezier(0.625, 0.05, 0, 1);
+    transform-origin: right;
+    transform: scaleX(0) rotate(0.001deg);
+  }
+  
+  @media (hover: hover) and (pointer: fine) {
+    [data-hover]:hover [data-underline-link]::before,
+    [data-underline-link]:hover::before {
+      transform-origin: left;
+      transform: scaleX(1) rotate(0.001deg);
+    }
+  }
+  
+  /* ------------------- Button Character Stagger Animation ------------------- */
+  
+  /* Characters */
+  :is(.button, .btn-animate-chars) [data-button-animate-chars] {
+    overflow: hidden;
+    position: relative;
+    display: inline-block;
+  }
+  
+  :is(.button, .btn-animate-chars) [data-button-animate-chars] span {
+    display: inline-block;
+    position: relative;
+    text-shadow: 0px 1.3em currentColor;
+    transform: translateY(0em) rotate(0.001deg);
+    transition: transform 0.6s cubic-bezier(0.625, 0.05, 0, 1);
+  }
+  
+  :is(.button, .btn-animate-chars):is(:hover, :focus-visible) [data-button-animate-chars] span {
+    transform: translateY(-1.3em) rotate(0.001deg);
+  }
+  
+  /* Background (directional reveal, same behavior as [data-directional-hover-tile]) */
+  .btn-animate-chars__bg {
+    inset: 0;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(-100%);
+    will-change: transform;
+  }
+  
+  /* Le fond directionnel est facultatif et doit être présent dans le bouton. */
+  :is(.button, .btn-animate-chars):has(.btn-animate-chars__bg) {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn-animate-chars__bg { position: absolute; pointer-events: none; z-index: -1; }
+  [data-directional-hover-item] { position: relative; overflow: hidden; }
+  [data-underline-link]:focus-visible::before { transform-origin: left; transform: scaleX(1); }
+  @media (prefers-reduced-motion: reduce), (hover: none) {
+    :is(.button, .btn-animate-chars) [data-button-animate-chars] span {
+      transition: none;
+      transform: none !important;
+      text-shadow: none;
+    }
+    .btn-animate-chars__bg, [data-directional-hover-tile], [data-underline-link]::before {
+      transition: none;
+    }
+  }
+  
