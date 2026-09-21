@@ -138,3 +138,78 @@
      });
    });
    
+   /* ==========================================
+      HOME — CURSOR : SUIVI FLUIDE AU SURVOL
+      Reprise du comportement du curseur projet fourni, sans dépendance GSAP.
+      Cibles : galerie, .project--image-wrapper ou [data-cursor].
+      ========================================== */
+   window.Webflow.push(() => {
+     const cursor = document.querySelector('.cursor');
+     if (!cursor || cursor.__homeCursorReady) return;
+     cursor.__homeCursorReady = true;
+     const targets = '.project--image-wrapper, .gallery--group1, .gallery--group2, [data-cursor]';
+     const desktop = window.matchMedia('(min-width: 992px) and (hover: hover) and (pointer: fine)');
+     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+     cursor.classList.add('home-cursor');
+     cursor.closest('.cursor-parent')?.classList.add('home-cursor-parent');
+     cursor.setAttribute('aria-hidden', 'true');
+     let x = 0, y = 0, targetX = 0, targetY = 0;
+     let active = false, positioned = false, frame = 0, lastTime = 0;
+   
+     function position() {
+       cursor.style.setProperty('--cursor-x', `${x}px`);
+       cursor.style.setProperty('--cursor-y', `${y}px`);
+     }
+     function tick(time) {
+       frame = 0;
+       const dt = lastTime ? Math.min(time - lastTime, 64) : 16.67;
+       lastTime = time;
+       // Same 0.18 follow factor as the reference, adjusted for refresh rate.
+       const factor = reduced.matches ? 1 : 1 - Math.pow(1 - .18, dt / 16.67);
+       x += (targetX - x) * factor;
+       y += (targetY - y) * factor;
+       const settled = Math.abs(targetX - x) + Math.abs(targetY - y) < .1;
+       if (settled) { x = targetX; y = targetY; }
+       position();
+       if (active && !settled) frame = requestAnimationFrame(tick);
+     }
+     function hide() {
+       active = false;
+       cursor.classList.remove('is-visible');
+       if (frame) cancelAnimationFrame(frame);
+       frame = 0;
+       lastTime = 0;
+     }
+     function update(element) {
+       const overTarget = element instanceof Element && element.closest(targets);
+       if (!desktop.matches || !overTarget) { hide(); return; }
+       if (!active) {
+         x = targetX; y = targetY;
+         position();
+         active = true;
+         cursor.classList.add('is-visible');
+       }
+       if (!frame) { lastTime = 0; frame = requestAnimationFrame(tick); }
+     }
+     document.addEventListener('pointermove', event => {
+       if (event.pointerType === 'touch') { hide(); return; }
+       targetX = event.clientX; targetY = event.clientY;
+       positioned = true;
+       update(event.target);
+     }, { passive: true });
+     document.addEventListener('pointerout', event => {
+       if (!event.relatedTarget) hide();
+       else if (positioned) update(event.relatedTarget);
+     });
+     window.addEventListener('blur', hide);
+     document.addEventListener('visibilitychange', () => { if (document.hidden) hide(); });
+     // Re-evaluate hover when the page moves under a stationary pointer.
+     function refresh() {
+       if (positioned) update(document.elementFromPoint(targetX, targetY));
+       else hide();
+     }
+     document.addEventListener('scroll', refresh, { passive: true, capture: true });
+     desktop.addEventListener('change', refresh);
+     window.addEventListener('resize', refresh, { passive: true });
+   });
+   
