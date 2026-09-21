@@ -1,0 +1,41 @@
+/* ==========================================
+   HOME — GALERIE : SLIDER À DEUX PILES DE CARTES
+   ========================================== */
+
+/* Keep a defined width and height on both gallery groups in Webflow. */
+.is--home-gallery .gallery--group1 > .w-dyn-list,
+.is--home-gallery .gallery--group2 > .w-dyn-list {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.is--home-gallery .gallery--group1 .w-dyn-items,
+.is--home-gallery .gallery--group2 .w-dyn-items {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.is--home-gallery .gallery--group1 .w-dyn-item,
+.is--home-gallery .gallery--group2 .w-dyn-item {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  transform-origin: 50% 80%;
+  backface-visibility: hidden;
+}
+
+.is--home-gallery .w-dyn-item .image--absolute100 {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.is--home-gallery [aria-disabled="true"] {
+  cursor: default;
+}
