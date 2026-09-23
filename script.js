@@ -1,9 +1,4 @@
-/* Animations extraites et adaptées au nouveau site.
- * Charger APRES GSAP 3.13.0. ScrollTrigger requis pour les effets au scroll.
- * SplitText facultatif pour load-split, fade-split et fade-scrub.
- * Garder home.js pour les animations spécifiques de la page et les sliders.
- * Aucun changement de dimensions, de typographie ou de structure des cartes.
- * Attribut conseillé : data-animation="fade" (voir les variantes ci-dessous).
+/* Animations du site.
  */
 (() => {
     "use strict";
@@ -305,3 +300,130 @@
     else init();
   })();
   
+  // -------- SVG : suivre les chemins, sous-chemin par sous-chemin --------
+(() => {
+  "use strict";
+  const initialized = new WeakSet();
+  const NS = "http://www.w3.org/2000/svg";
+  const number = (value, fallback) => Number.isFinite(Number(value)) && Number(value) > 0 ? Number(value) : fallback;
+
+  // Séparer les mouvements M/m sans casser les coordonnées relatives.
+  function splitPath(shape) {
+    const d = shape.getAttribute("d") || "";
+    const chunks = d.match(/[Mm][^Mm]*/g) || [];
+    let prefix = "";
+    const probe = document.createElementNS(NS, "path");
+    return chunks.map(chunk => {
+      let result = chunk;
+      if (chunk[0] === "m") {
+        const pair = chunk.match(/^m\s*([-+]?(?:\d*\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?)\s*,?\s*([-+]?(?:\d*\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?)/i);
+        if (!pair) throw new Error("Mouvement SVG relatif non reconnu");
+        let point = {x: 0, y: 0};
+        if (prefix) {
+          probe.setAttribute("d", prefix);
+          point = probe.getPointAtLength(probe.getTotalLength());
+        }
+        // Les paires supplémentaires après m restent des lignes relatives.
+        const remainder = chunk.slice(pair[0].length);
+        result = `M${point.x + Number(pair[1])} ${point.y + Number(pair[2])}` +
+          (/^\s*,?\s*[-+.\d]/.test(remainder) ? " l" + remainder.replace(/^\s*,/, " ") : remainder);
+      }
+      prefix += chunk;
+      return result;
+    });
+  }
+
+  function init() {
+    if (!window.gsap || !window.ScrollTrigger) return;
+    if (document.documentElement.matches(".wf-design-mode, .wf-editor")) return;
+    const gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
+    document.querySelectorAll('svg[animation="trace"]').forEach(svg => {
+      if (initialized.has(svg)) return;
+      initialized.add(svg);
+      const duration = number(svg.dataset.traceDuration, 1.8);
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const originals = [];
+        const strokes = [];
+        const cleanup = () => {
+          strokes.forEach(({node}) => node.remove());
+          originals.forEach(({shape, style}) => {
+            if (style === null) shape.removeAttribute("style");
+            else shape.setAttribute("style", style);
+          });
+        };
+        const shapes = [...svg.querySelectorAll("path, line, polyline, polygon, circle, ellipse, rect")];
+        shapes.forEach(shape => {
+          if (shape.closest("defs, clipPath, mask, symbol") || shape.closest("svg") !== svg) return;
+          const cs = getComputedStyle(shape);
+          if (cs.display === "none" || cs.visibility === "hidden" || Number(cs.opacity) === 0) return;
+          const filled = cs.fill !== "none" && Number(cs.fillOpacity) > 0;
+          const stroked = cs.stroke !== "none" && Number(cs.strokeOpacity) > 0;
+          if (!filled && !stroked) return;
+          const parts = [];
+          try {
+            const chunks = shape.tagName.toLowerCase() === "path" ? splitPath(shape) : [null];
+            chunks.forEach(d => {
+              const node = shape.cloneNode(false);
+              node.removeAttribute("id");
+              node.removeAttribute("class");
+              node.removeAttribute("style");
+              node.removeAttribute("pathLength");
+              if (d !== null) node.setAttribute("d", d);
+              node.setAttribute("aria-hidden", "true");
+              node.style.pointerEvents = "none";
+              node.style.fill = "none";
+              node.style.stroke = stroked ? cs.stroke : cs.fill;
+              node.style.strokeWidth = svg.dataset.traceWidth || (stroked ? cs.strokeWidth : "1");
+              node.style.strokeLinecap = "round";
+              node.style.strokeLinejoin = "round";
+              node.style.opacity = cs.opacity;
+              node.style.strokeOpacity = stroked ? cs.strokeOpacity : cs.fillOpacity;
+              node.style.transform = cs.transform;
+              node.style.transformOrigin = cs.transformOrigin;
+              node.style.transformBox = cs.transformBox;
+              node.style.transition = "none";
+              shape.parentNode.insertBefore(node, shape);
+              parts.push({node, length: 0});
+              const length = node.getTotalLength();
+              if (!Number.isFinite(length) || length <= 0) {
+                node.remove(); parts.pop(); return;
+              }
+              parts[parts.length - 1].length = length;
+              node.style.strokeDasharray = `${length} ${length}`;
+              node.style.strokeDashoffset = String(length);
+            });
+          } catch (error) {
+            parts.forEach(({node}) => node.remove());
+            console.warn("SVG trace : forme laissée visible", error);
+            return;
+          }
+          if (!parts.length) return;
+          originals.push({shape, style: shape.getAttribute("style"), opacity: Number(cs.opacity)});
+          strokes.push(...parts);
+          gsap.set(shape, {opacity: 0});
+        });
+        if (!strokes.length) return;
+        const total = strokes.reduce((sum, item) => sum + item.length, 0);
+        const tl = gsap.timeline({
+          scrollTrigger: {trigger: svg, start: "top 85%", once: true},
+          onComplete: cleanup
+        });
+        // Vitesse constante, aucun redémarrage simultané des sous-chemins.
+        strokes.forEach(({node, length}) => {
+          tl.to(node, {strokeDashoffset: 0, duration: duration * length / total, ease: "none"});
+        });
+        originals.forEach(({shape, opacity}) => {
+          tl.to(shape, {opacity, duration: 0.3, ease: "power1.inOut"}, duration);
+        });
+        tl.to(strokes.map(item => item.node), {opacity: 0, duration: 0.3, ease: "power1.inOut"}, duration);
+        return () => { tl.scrollTrigger?.kill(); tl.kill(); cleanup(); };
+      });
+    });
+    if (document.readyState === "complete") window.ScrollTrigger.refresh();
+    else window.addEventListener("load", () => window.ScrollTrigger.refresh(), {once: true});
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, {once: true});
+  else init();
+})();
