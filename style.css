@@ -161,6 +161,7 @@ img[data-animation="parallax"] {
 
 /* -------------------- Smooth Tablet and Mobile Navigation -------------------- */
 .site-mobile-menu { display: none; }
+.site-mobile-menu[hidden] { display: none !important; }
 @media screen and (max-width: 991px) {
   .navbar.is--menu-ready { z-index: 1002; }
   .navbar.is--menu-ready,
@@ -168,7 +169,8 @@ img[data-animation="parallax"] {
   .site-mobile-menu,
   .site-mobile-menu * { color: #f0ece8 !important; }
   .navbar.is--menu-ready .nav--menu {
-    display: flex !important;
+    /* Remove the legacy menu box while keeping its logo in the header. */
+    display: contents !important;
     visibility: visible !important;
     opacity: 1 !important;
   }

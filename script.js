@@ -280,6 +280,7 @@ function initMobileNavbar() {
     // Keep the original header and logo in their Webflow positions.
     const panel = document.createElement("div");
     panel.className = "site-mobile-menu";
+    panel.hidden = true; // No layout box before the first interaction.
     panel.id = `site-mobile-menu-${index}`;
     panel.setAttribute("aria-label", "Mobile navigation");
     panel.setAttribute("role", "navigation");
@@ -316,6 +317,7 @@ function initMobileNavbar() {
     const finishClose = () => {
       if (open) return;
       navbar.classList.remove("is--menu-open");
+      panel.hidden = true; // Hide only after the reverse animation finishes.
       panel.inert = true;
       panel.setAttribute("aria-hidden", "true");
       unlock();
@@ -350,6 +352,7 @@ function initMobileNavbar() {
       if (!media.matches) return;
       open = true;
       afterClose = null;
+      panel.hidden = false;
       if (!locked) {
         savedOverflow = document.body.style.getPropertyValue("overflow");
         savedPriority = document.body.style.getPropertyPriority("overflow");
