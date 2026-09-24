@@ -264,100 +264,143 @@ function initGrowAnimations() {
   });
 }
 
-// -------------------- Tablet and Mobile Navigation --------------------
+// -------------------- Smooth Tablet and Mobile Navigation --------------------
 function initMobileNavbar() {
+  if (!window.gsap) return;
+  const gsap = window.gsap;
   const media = window.matchMedia("(max-width: 991px)");
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
   document.querySelectorAll(".navbar").forEach((navbar, index) => {
     const trigger = navbar.querySelector(".menu--trigger");
     const menu = navbar.querySelector(".nav--menu");
     if (!trigger || !menu) return;
+    navbar.classList.remove("is--menu-active", "is--menu-open");
     navbar.classList.add("is--menu-ready");
-    if (!menu.id) menu.id = `site-mobile-navigation-${index}`;
-    trigger.setAttribute("aria-controls", menu.id);
+
+    // Keep the original header and logo in their Webflow positions.
+    const panel = document.createElement("div");
+    panel.className = "site-mobile-menu";
+    panel.id = `site-mobile-menu-${index}`;
+    panel.setAttribute("aria-label", "Mobile navigation");
+    panel.setAttribute("role", "navigation");
+    const list = document.createElement("div");
+    list.className = "site-mobile-menu__links";
+    [...menu.children].filter(el => !el.matches(".nav--brand")).forEach(el => {
+      const clone = el.cloneNode(true);
+      [clone, ...clone.querySelectorAll("[id]")].forEach(node => node.removeAttribute("id"));
+      list.appendChild(clone);
+    });
+    if (!list.querySelector("a[href]")) return;
+    panel.appendChild(list);
+    document.body.appendChild(panel);
+    panel.inert = true;
+    panel.setAttribute("aria-hidden", "true");
+    trigger.setAttribute("aria-controls", panel.id);
     trigger.setAttribute("aria-expanded", "false");
     trigger.setAttribute("aria-label", "Open menu");
-    if (trigger.tagName !== "BUTTON") {
-      trigger.setAttribute("role", "button");
-      trigger.setAttribute("tabindex", "0");
-    } else trigger.setAttribute("type", "button");
+    if (trigger.tagName === "BUTTON") trigger.type = "button";
+    else { trigger.setAttribute("role", "button"); trigger.setAttribute("tabindex", "0"); }
+    const openIcon = trigger.querySelector(".menu--to-open");
+    const closeIcon = trigger.querySelector(".menu--to-close");
     let open = false;
-    let timer;
     let locked = false;
-    let overflow;
-    let overflowPriority;
+    let savedOverflow;
+    let savedPriority;
+    let afterClose = null;
     const unlock = () => {
       if (!locked) return;
-      if (overflow) document.body.style.setProperty("overflow", overflow, overflowPriority);
+      if (savedOverflow) document.body.style.setProperty("overflow", savedOverflow, savedPriority);
       else document.body.style.removeProperty("overflow");
       locked = false;
     };
-    const close = (restoreFocus = false, immediate = false) => {
-      open = false;
-      clearTimeout(timer);
+    const finishClose = () => {
+      if (open) return;
       navbar.classList.remove("is--menu-open");
+      panel.inert = true;
+      panel.setAttribute("aria-hidden", "true");
+      unlock();
+      const action = afterClose;
+      afterClose = null;
+      if (action) action();
+    };
+    gsap.set(panel, {autoAlpha: 0, y: -16});
+    gsap.set(list.children, {opacity: 0, y: 16});
+    if (closeIcon) gsap.set(closeIcon, {autoAlpha: 0, rotate: -45, scale: 0.8});
+    if (openIcon) gsap.set(openIcon, {autoAlpha: 1, rotate: 0, scale: 1});
+    const tl = gsap.timeline({paused: true, onReverseComplete: finishClose});
+    tl.to(panel, {autoAlpha: 1, y: 0, duration: 0.5, ease: "power3.out"}, 0)
+      .to(list.children, {opacity: 1, y: 0, duration: 0.4, stagger: 0.04, ease: "power3.out"}, 0.12);
+    if (openIcon) tl.to(openIcon, {autoAlpha: 0, rotate: 45, scale: 0.8, duration: 0.25}, 0);
+    if (closeIcon) tl.to(closeIcon, {autoAlpha: 1, rotate: 0, scale: 1, duration: 0.3}, 0.08);
+
+    const close = (focus = true, instant = false, action = null) => {
+      open = false;
+      afterClose = action;
+      panel.inert = true;
+      panel.setAttribute("aria-hidden", "true");
       trigger.setAttribute("aria-expanded", "false");
       trigger.setAttribute("aria-label", "Open menu");
-      const finish = () => {
-        navbar.classList.remove("is--menu-active");
-        unlock();
-      };
-      if (immediate || window.matchMedia("(prefers-reduced-motion: reduce)").matches) finish();
-      else timer = setTimeout(finish, 240);
-      if (restoreFocus) trigger.focus();
+      if (focus) trigger.focus({preventScroll: true});
+      if (instant || reduced.matches || tl.progress() === 0) {
+        tl.pause(0, true);
+        finishClose();
+      } else tl.timeScale(1.4).reverse();
     };
     const show = () => {
-      if (!media.matches || open) return;
-      clearTimeout(timer);
+      if (!media.matches) return;
       open = true;
+      afterClose = null;
       if (!locked) {
-        overflow = document.body.style.getPropertyValue("overflow");
-        overflowPriority = document.body.style.getPropertyPriority("overflow");
+        savedOverflow = document.body.style.getPropertyValue("overflow");
+        savedPriority = document.body.style.getPropertyPriority("overflow");
         document.body.style.setProperty("overflow", "hidden");
         locked = true;
       }
-      navbar.classList.add("is--menu-active");
-      // Commit the closed overlay before applying its open state.
-      void menu.offsetWidth;
+      // Measure header clearance without moving the header.
+      const bottom = Math.max(0, navbar.getBoundingClientRect().bottom);
+      panel.style.setProperty("--menu-header-space", `${bottom + 24}px`);
       navbar.classList.add("is--menu-open");
+      panel.inert = false;
+      panel.setAttribute("aria-hidden", "false");
       trigger.setAttribute("aria-expanded", "true");
       trigger.setAttribute("aria-label", "Close menu");
+      if (reduced.matches) tl.progress(1).pause();
+      else tl.timeScale(1).play();
     };
     trigger.addEventListener("click", event => {
       if (!media.matches) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (open) close(true); else show();
+      if (open) close(); else show();
     }, true);
     trigger.addEventListener("keydown", event => {
       if (!media.matches || trigger.tagName === "BUTTON") return;
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        trigger.click();
-      }
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); trigger.click(); }
     });
-    menu.addEventListener("click", event => {
-      if (open && event.target.closest("a[href]")) close(false, true);
+    panel.addEventListener("click", event => {
+      const link = event.target.closest("a[href]");
+      if (!open || !link || event.defaultPrevented) return;
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey ||
+          link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
+      const href = link.getAttribute("href");
+      event.preventDefault();
+      close(true, false, href && href !== "#" ? () => window.location.assign(link.href) : null);
     });
     document.addEventListener("keydown", event => {
       if (!open) return;
-      if (event.key === "Escape") { event.preventDefault(); close(true); }
+      if (event.key === "Escape") { event.preventDefault(); close(); return; }
       if (event.key !== "Tab") return;
-      const focusable = [...navbar.querySelectorAll('a[href], button, [tabindex="0"]')]
+      const targets = [trigger, ...panel.querySelectorAll('a[href], button, [tabindex="0"]')]
         .filter(el => el.getClientRects().length && !el.disabled);
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
+      const first = targets[0], last = targets[targets.length - 1];
       if (!first) return;
-      if (!navbar.contains(document.activeElement)) {
+      const active = document.activeElement;
+      if (!targets.includes(active) || (!event.shiftKey && active === last)) {
         event.preventDefault(); first.focus();
-      } else if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault(); last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault(); first.focus();
-      }
+      } else if (event.shiftKey && active === first) { event.preventDefault(); last.focus(); }
     });
     media.addEventListener("change", () => close(false, true));
     window.addEventListener("pageshow", () => close(false, true));
-    close(false, true);
   });
 }
 
