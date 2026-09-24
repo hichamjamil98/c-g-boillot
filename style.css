@@ -246,3 +246,30 @@ img[data-animation="parallax"] {
   [data-animation="grow"] { width: 100%; }
 
 }
+
+/* -------------------- SVG Intro Loader -------------------- */
+/* Existing Webflow loader layout, typography and logo sizes are preserved. */
+.loading--screen { display: none; }
+.loading--screen[hidden] { display: none !important; }
+.loading--screen.is--intro-active {
+  display: flex !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 2147483000;
+  overflow: hidden;
+  background-color: #808C7B;
+  color: #f0ece8;
+  visibility: visible;
+  opacity: 1;
+}
+.loading--screen.is--intro-active * { color: inherit; }
+.loading--pourcentage { font-variant-numeric: tabular-nums; }
+html.is--intro-loading,
+html.is--intro-loading body { overflow: hidden !important; }
+html.is--intro-loading .navbar,
+html.is--intro-loading .main-wrapper,
+html.is--intro-loading .footer { visibility: hidden; }
+:is(.wf-design-mode, .wf-editor) .loading--screen { display: none !important; }

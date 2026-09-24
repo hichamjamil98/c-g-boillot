@@ -1,3 +1,193 @@
+/* ==================== SVG Intro Loader ====================
+ * Uses .loading--screen, its inline SVGs and .loading--pourcentage.
+ * The percentage is an animated intro indicator, not a byte counter.
+ * Waits briefly for fonts and the hero image, never for background videos.
+ * Plays once per same-origin browser tab session (sessionStorage).
+ */
+window.__siteIntroReady = window.__siteIntroReady || new Promise(resolve => {
+  const NS = "http://www.w3.org/2000/svg";
+  const VISIT_KEY = "cg-boillot:intro-complete";
+  const hasPlayed = () => {
+    try { return sessionStorage.getItem(VISIT_KEY) === "1"; }
+    catch (_) { return Boolean(window.__siteIntroPlayed); }
+  };
+  const rememberVisit = () => {
+    window.__siteIntroPlayed = true;
+    try { sessionStorage.setItem(VISIT_KEY, "1"); } catch (_) {}
+  };
+function splitLoaderPath(shape) {
+  const d = shape.getAttribute("d") || "";
+  const chunks = d.match(/[Mm][^Mm]*/g) || [];
+  let prefix = "";
+  const probe = document.createElementNS(NS, "path");
+  return chunks.map(chunk => {
+    let result = chunk;
+    if (chunk[0] === "m") {
+      const pair = chunk.match(/^m\s*([-+]?(?:\d*\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?)\s*,?\s*([-+]?(?:\d*\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?)/i);
+      if (!pair) throw new Error("Mouvement SVG relatif non reconnu");
+      let point = {x: 0, y: 0};
+      if (prefix) {
+        probe.setAttribute("d", prefix);
+        point = probe.getPointAtLength(probe.getTotalLength());
+      }
+      // Additional coordinate pairs after m remain relative lines.
+      const remainder = chunk.slice(pair[0].length);
+      result = `M${point.x + Number(pair[1])} ${point.y + Number(pair[2])}` +
+        (/^\s*,?\s*[-+.\d]/.test(remainder) ? " l" + remainder.replace(/^\s*,/, " ") : remainder);
+    }
+    prefix += chunk;
+    return result;
+  });
+}
+
+  const start = () => {
+    const screen = document.querySelector(".loading--screen");
+    const root = document.documentElement;
+    if (!screen || !window.gsap || root.matches(".wf-design-mode, .wf-editor")) {
+      if (screen && !root.matches(".wf-design-mode, .wf-editor")) screen.hidden = true;
+      resolve();
+      return;
+    }
+    if (hasPlayed()) {
+      screen.hidden = true;
+      screen.classList.remove("is--intro-active");
+      root.classList.remove("is--intro-loading");
+      resolve();
+      return;
+    }
+    const gsap = window.gsap;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const counter = screen.querySelector(".loading--pourcentage");
+    const originals = [];
+    const temporary = [];
+    const animations = [];
+    let finished = false;
+    let watchdog;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(watchdog);
+      animations.forEach(animation => animation.kill());
+      temporary.forEach(node => node.remove());
+      originals.forEach(({shape, style}) => {
+        if (style === null) shape.removeAttribute("style");
+        else shape.setAttribute("style", style);
+      });
+      if (counter) counter.textContent = "100%";
+      screen.hidden = true;
+      screen.classList.remove("is--intro-active");
+      root.classList.remove("is--intro-loading");
+      rememberVisit();
+      resolve(); // Release page entrance animations after the overlay has closed.
+    };
+    watchdog = setTimeout(finish, 6500);
+    screen.hidden = false;
+    screen.classList.add("is--intro-active");
+    screen.setAttribute("aria-hidden", "true");
+    root.classList.add("is--intro-loading");
+    if (counter) counter.textContent = "0%";
+    try {
+      gsap.set(screen, {autoAlpha: 1, clipPath: "inset(0% 0% 0% 0%)"});
+      const draw = gsap.timeline({paused: true});
+      screen.querySelectorAll("svg").forEach((svg, svgIndex) => {
+        const paths = [];
+        const fills = [];
+        svg.querySelectorAll("path, circle, ellipse, rect, line, polyline, polygon").forEach(shape => {
+          if (shape.closest("defs, mask, clipPath, symbol")) return;
+          const cs = getComputedStyle(shape);
+          const color = cs.stroke !== "none" ? cs.stroke : cs.fill;
+          if (color === "none" || cs.display === "none") return;
+          const chunks = shape.tagName.toLowerCase() === "path" ? splitLoaderPath(shape) : [null];
+          const local = [];
+          chunks.forEach(d => {
+            const node = shape.cloneNode(false);
+            node.removeAttribute("id");
+            node.removeAttribute("class");
+            node.removeAttribute("style");
+            node.removeAttribute("pathLength");
+            if (d !== null) node.setAttribute("d", d);
+            node.style.fill = "none";
+            node.style.stroke = color;
+            node.style.strokeWidth = cs.stroke !== "none" ? cs.strokeWidth : "0.7";
+            node.style.strokeLinecap = "round";
+            node.style.strokeLinejoin = "round";
+            node.style.transform = cs.transform;
+            node.style.transformOrigin = cs.transformOrigin;
+            node.style.transformBox = cs.transformBox;
+            node.style.pointerEvents = "none";
+            shape.parentNode.insertBefore(node, shape);
+            temporary.push(node);
+            const length = node.getTotalLength();
+            if (!Number.isFinite(length) || length <= 0) { node.remove(); return; }
+            node.style.strokeDasharray = `${length} ${length}`;
+            node.style.strokeDashoffset = String(length);
+            local.push({node, length});
+          });
+          if (!local.length) return;
+          const opacity = Number(cs.opacity);
+          originals.push({shape, style: shape.getAttribute("style")});
+          gsap.set(shape, {opacity: 0});
+          paths.push(...local);
+          fills.push({shape, opacity});
+        });
+        const total = paths.reduce((sum, p) => sum + p.length, 0);
+        let position = svgIndex * 0.18;
+        const duration = reduced ? 0 : (svgIndex === 0 ? 1.2 : 1.65);
+        paths.forEach(({node, length}) => {
+          const part = duration * length / total;
+          draw.to(node, {strokeDashoffset: 0, duration: part, ease: "none"}, position);
+          position += part;
+        });
+        fills.forEach(({shape, opacity}) => draw.to(shape, {opacity, duration: reduced ? 0 : 0.35}, position));
+        if (paths.length) draw.to(paths.map(p => p.node), {opacity: 0, duration: reduced ? 0 : 0.35}, position);
+      });
+      animations.push(draw);
+      const visualReady = new Promise(done => {
+        draw.eventCallback("onComplete", done);
+        draw.play();
+        if (draw.duration() === 0) done();
+      });
+      const progress = {value: 0};
+      const render = () => { if (counter) counter.textContent = `${Math.floor(progress.value)}%`; };
+      const counterReady = new Promise(done => {
+        animations.push(gsap.to(progress, {
+          value: 90, duration: reduced ? 0 : 2.1, ease: "power1.inOut",
+          onUpdate: render, onComplete: done
+        }));
+      });
+      const hero = document.querySelector(".is--home-hero img, .is--hero img");
+      let cancelImageWait = () => {};
+      const imageReady = new Promise(done => {
+        if (!hero || hero.complete) { done(); return; }
+        const settle = () => { cancelImageWait(); done(); };
+        cancelImageWait = () => {
+          hero.removeEventListener("load", settle);
+          hero.removeEventListener("error", settle);
+        };
+        hero.addEventListener("load", settle, {once: true});
+        hero.addEventListener("error", settle, {once: true});
+      });
+      const fontsReady = document.fonts?.ready || Promise.resolve();
+      let resourceTimer;
+      const resourceLimit = new Promise(done => { resourceTimer = setTimeout(done, 4000); });
+      const resourcesReady = Promise.race([Promise.allSettled([fontsReady, imageReady]), resourceLimit])
+        .then(() => { clearTimeout(resourceTimer); cancelImageWait(); });
+      Promise.all([visualReady, counterReady, resourcesReady]).then(() => {
+        if (finished) return;
+        const exit = gsap.timeline({onComplete: finish});
+        animations.push(exit);
+        exit.to(progress, {value: 100, duration: reduced ? 0 : 0.3, ease: "power1.out", onUpdate: render})
+          .to(screen, {clipPath: "inset(0% 0% 100% 0%)", duration: reduced ? 0 : 0.65, ease: "power3.inOut"}, reduced ? ">" : ">+=0.15");
+      }).catch(finish);
+    } catch (error) {
+      console.warn("Intro loader skipped:", error);
+      finish();
+    }
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, {once: true});
+  else start();
+});
+
 /* ==================== Site Animations ====================
  * Load after GSAP, ScrollTrigger and optional SplitText.
  * Keep home.js for page-specific sliders.
@@ -514,8 +704,8 @@ function initMotion() {
     initButtonCharacterStagger();
     initButtonDirectionalBg();
     initDirectionalListHover();
-    if (document.fonts?.ready) document.fonts.ready.then(initMotion);
-    else initMotion();
+    // The intro already waits for fonts with a timeout.
+    window.__siteIntroReady.then(initMotion);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, {once: true});
   else init();
@@ -645,6 +835,7 @@ function init() {
   if (document.readyState === "complete") window.ScrollTrigger.refresh();
   else window.addEventListener("load", () => window.ScrollTrigger.refresh(), {once: true});
 }
-if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, {once: true});
-else init();
+const startTrace = () => window.__siteIntroReady.then(init);
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startTrace, {once: true});
+else startTrace();
 })();
