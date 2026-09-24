@@ -95,8 +95,11 @@ function splitLoaderPath(shape) {
         svg.querySelectorAll("path, circle, ellipse, rect, line, polyline, polygon").forEach(shape => {
           if (shape.closest("defs, mask, clipPath, symbol")) return;
           const cs = getComputedStyle(shape);
-          const color = cs.stroke !== "none" ? cs.stroke : cs.fill;
-          if (color === "none" || cs.display === "none") return;
+          // Use each original SVG shape's Webflow paint for its temporary trace.
+          const stroked = cs.stroke !== "none" && Number(cs.strokeOpacity) > 0;
+          const filled = cs.fill !== "none" && Number(cs.fillOpacity) > 0;
+          if ((!stroked && !filled) || cs.display === "none") return;
+          const color = stroked ? cs.stroke : cs.fill;
           const chunks = shape.tagName.toLowerCase() === "path" ? splitLoaderPath(shape) : [null];
           const local = [];
           chunks.forEach(d => {
@@ -108,7 +111,9 @@ function splitLoaderPath(shape) {
             if (d !== null) node.setAttribute("d", d);
             node.style.fill = "none";
             node.style.stroke = color;
-            node.style.strokeWidth = cs.stroke !== "none" ? cs.strokeWidth : "0.7";
+            node.style.strokeWidth = stroked ? cs.strokeWidth : "0.7";
+            node.style.strokeOpacity = stroked ? cs.strokeOpacity : cs.fillOpacity;
+            node.style.opacity = cs.opacity;
             node.style.strokeLinecap = "round";
             node.style.strokeLinejoin = "round";
             node.style.transform = cs.transform;

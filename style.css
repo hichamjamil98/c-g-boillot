@@ -248,7 +248,7 @@ img[data-animation="parallax"] {
 }
 
 /* -------------------- SVG Intro Loader -------------------- */
-/* Existing Webflow loader layout, typography and logo sizes are preserved. */
+/* Loader colors, backgrounds and SVG paints remain controlled by Webflow. */
 .loading--screen { display: none; }
 .loading--screen[hidden] { display: none !important; }
 .loading--screen.is--intro-active {
@@ -260,12 +260,9 @@ img[data-animation="parallax"] {
   height: 100dvh;
   z-index: 2147483000;
   overflow: hidden;
-  background-color: #808C7B;
-  color: #f0ece8;
   visibility: visible;
   opacity: 1;
 }
-.loading--screen.is--intro-active * { color: inherit; }
 .loading--pourcentage { font-variant-numeric: tabular-nums; }
 html.is--intro-loading,
 html.is--intro-loading body { overflow: hidden !important; }
