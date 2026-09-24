@@ -252,6 +252,115 @@ function initNavbarScroll() {
   update();
 }
 
+// -------------------- Width Reveal on Scroll --------------------
+function initGrowAnimations() {
+  document.querySelectorAll('[data-animation="grow"]').forEach(el => {
+    gsap.fromTo(el, {width: "0%"}, {
+      width: "100%",
+      duration: 1.2,
+      ease: "power3.inOut",
+      scrollTrigger: {trigger: el.parentElement || el, start: "top 85%", once: true}
+    });
+  });
+}
+
+// -------------------- Tablet and Mobile Navigation --------------------
+function initMobileNavbar() {
+  const media = window.matchMedia("(max-width: 991px)");
+  document.querySelectorAll(".navbar").forEach((navbar, index) => {
+    const trigger = navbar.querySelector(".menu--trigger");
+    const menu = navbar.querySelector(".nav--menu");
+    if (!trigger || !menu) return;
+    navbar.classList.add("is--menu-ready");
+    if (!menu.id) menu.id = `site-mobile-navigation-${index}`;
+    trigger.setAttribute("aria-controls", menu.id);
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.setAttribute("aria-label", "Open menu");
+    if (trigger.tagName !== "BUTTON") {
+      trigger.setAttribute("role", "button");
+      trigger.setAttribute("tabindex", "0");
+    } else trigger.setAttribute("type", "button");
+    let open = false;
+    let timer;
+    let locked = false;
+    let overflow;
+    let overflowPriority;
+    const unlock = () => {
+      if (!locked) return;
+      if (overflow) document.body.style.setProperty("overflow", overflow, overflowPriority);
+      else document.body.style.removeProperty("overflow");
+      locked = false;
+    };
+    const close = (restoreFocus = false, immediate = false) => {
+      open = false;
+      clearTimeout(timer);
+      navbar.classList.remove("is--menu-open");
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.setAttribute("aria-label", "Open menu");
+      const finish = () => {
+        navbar.classList.remove("is--menu-active");
+        unlock();
+      };
+      if (immediate || window.matchMedia("(prefers-reduced-motion: reduce)").matches) finish();
+      else timer = setTimeout(finish, 240);
+      if (restoreFocus) trigger.focus();
+    };
+    const show = () => {
+      if (!media.matches || open) return;
+      clearTimeout(timer);
+      open = true;
+      if (!locked) {
+        overflow = document.body.style.getPropertyValue("overflow");
+        overflowPriority = document.body.style.getPropertyPriority("overflow");
+        document.body.style.setProperty("overflow", "hidden");
+        locked = true;
+      }
+      navbar.classList.add("is--menu-active");
+      // Commit the closed overlay before applying its open state.
+      void menu.offsetWidth;
+      navbar.classList.add("is--menu-open");
+      trigger.setAttribute("aria-expanded", "true");
+      trigger.setAttribute("aria-label", "Close menu");
+    };
+    trigger.addEventListener("click", event => {
+      if (!media.matches) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (open) close(true); else show();
+    }, true);
+    trigger.addEventListener("keydown", event => {
+      if (!media.matches || trigger.tagName === "BUTTON") return;
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        trigger.click();
+      }
+    });
+    menu.addEventListener("click", event => {
+      if (open && event.target.closest("a[href]")) close(false, true);
+    });
+    document.addEventListener("keydown", event => {
+      if (!open) return;
+      if (event.key === "Escape") { event.preventDefault(); close(true); }
+      if (event.key !== "Tab") return;
+      const focusable = [...navbar.querySelectorAll('a[href], button, [tabindex="0"]')]
+        .filter(el => el.getClientRects().length && !el.disabled);
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first) return;
+      if (!navbar.contains(document.activeElement)) {
+        event.preventDefault(); first.focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus();
+      }
+    });
+    media.addEventListener("change", () => close(false, true));
+    window.addEventListener("pageshow", () => close(false, true));
+    close(false, true);
+  });
+}
+
 // -------------------- Load and Scroll Animations --------------------
 function initMotion() {
     const gsap = window.gsap;
@@ -289,6 +398,7 @@ function initMotion() {
             scrollTrigger: {trigger: el, start: "top bottom", once: true}
           });
         });
+        initGrowAnimations();
         initServiceRowsScroll();
         initFooterParallax();
         cleanupParallax = initImageParallax();
@@ -354,6 +464,7 @@ function initMotion() {
   function init() {
     if (document.documentElement.matches(".wf-design-mode, .wf-editor")) return;
     initNavbarScroll();
+    initMobileNavbar();
     initButtonCharacterStagger();
     initButtonDirectionalBg();
     initDirectionalListHover();
