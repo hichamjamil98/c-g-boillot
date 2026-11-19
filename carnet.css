@@ -1,0 +1,133 @@
+/* Scope all styles to this section to preserve other page components. */
+.section.is--carnet[data-carnet-filter-ready] .filter--carnet {
+    position: relative;
+    z-index: 10;
+    overflow: visible;
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] .filter--item {
+    position: relative;
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] .filter--item.is--filter-open {
+    z-index: 11;
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] .filter--drop {
+    cursor: pointer;
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] [data-carnet-filter-label] {
+    opacity: 0.5;
+    transition: opacity 200ms ease;
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] .is--filter-selected [data-carnet-filter-label] {
+    opacity: 1 !important;
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] .arrow--drop {
+    transform: rotate(0deg);
+    transform-origin: center;
+    transition: transform 250ms ease;
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] .is--filter-open .arrow--drop {
+    transform: rotate(180deg);
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] .filter--drop-list {
+    position: absolute;
+    inset: calc(100% + 0.5rem) auto auto 0;
+    z-index: 12;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: max-content;
+    min-width: 100%;
+    max-width: min(22rem, calc(100vw - 2rem));
+    max-height: 18rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.25rem;
+    /* Override this custom property to change the dropdown background. */
+    background: var(--carnet-filter-menu-bg, #571719);
+    color: var(--carnet-filter-menu-color, #fff);
+    box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.12);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(0.35rem);
+    transition: opacity 200ms ease, transform 200ms ease, visibility 200ms;
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] .is--filter-open .filter--drop-list {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] .filter--option {
+    appearance: none;
+    display: block;
+    flex: 0 0 auto;
+    width: 100%;
+    margin: 0;
+    padding: 0.65rem 0.8rem;
+    border: 0;
+    border-radius: 0.15rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: 1.4;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] .filter--option:hover,
+  .section.is--carnet[data-carnet-filter-ready] .filter--option[aria-pressed="true"] {
+    background: rgba(255, 255, 255, 0.12);
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] .filter--option:focus-visible,
+  .section.is--carnet[data-carnet-filter-ready] .filter--drop:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+  
+  .section.is--carnet[data-carnet-filter-ready] .collection--carnet > [hidden],
+  .section.is--carnet[data-carnet-filter-ready] .carnet--filter-empty[hidden] {
+    display: none !important;
+  }
+  
+  .section.is--carnet .carnet--filter-empty {
+    margin: 0;
+    padding: 3rem 0;
+    text-align: center;
+  }
+  
+  /* Keep alternating layouts based on visible results after filtering. */
+  @media screen and (min-width: 992px) {
+    .section.is--carnet[data-carnet-filter-ready] .collection--carnet > .w-dyn-item .carnet--content {
+      order: 0;
+    }
+  
+    .section.is--carnet[data-carnet-filter-ready] .collection--carnet > .w-dyn-item.is--filter-even .carnet--content {
+      order: -1;
+    }
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    .section.is--carnet[data-carnet-filter-ready] .filter--drop-list,
+    .section.is--carnet[data-carnet-filter-ready] .arrow--drop,
+    .section.is--carnet[data-carnet-filter-ready] [data-carnet-filter-label] {
+      transition: none;
+    }
+  }
+  
